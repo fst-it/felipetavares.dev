@@ -1,0 +1,304 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TableOfContents from '../../components/astro/TableOfContents.astro';
+import Callout from '../../components/astro/Callout.astro';
+import SubstackEmbed from '../../components/astro/SubstackEmbed.astro';
+import { contentRepository, siteConfig } from '../../config/site';
+import { slugifyTag } from '../../lib/slugify-tag';
+import { formatLongDate } from '../../lib/format-date';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('articles', ({ data }) => !data.draft);
+  return entries.map((entry) => ({ params: { slug: entry.id } }));
+}
+
+const { slug } = Astro.params;
+const entry = await getEntry('articles', slug!);
+
+if (!entry || entry.data.draft) {
+  return Astro.redirect('/writing');
+}
+
+const { Content, headings, remarkPluginFrontmatter } = await render(entry);
+const article = (await contentRepository.getArticle(slug!))!;
+// Exact reading time computed by the remark plugin during MDX render (spec section 5);
+// falls back to the repository's word-count estimate if the plugin didn't run.
+const readingTime = (remarkPluginFrontmatter as { readingTime?: string }).readingTime ?? article.readingTime;
+
+const allArticles = await contentRepository.getArticles();
+const currentIndex = allArticles.findIndex((a) => a.slug === article.slug);
+const prevArticle = currentIndex >= 0 ? allArticles[currentIndex + 1] : undefined; // older
+const nextArticle = currentIndex > 0 ? allArticles[currentIndex - 1] : undefined; // newer
+
+const pageTitle = article.title;
+const pageDescription = article.description;
+const canonical = article.canonicalOverride ?? `${siteConfig.url}/writing/${article.slug}`;
+const ogImage = `${siteConfig.url}/og/writing/${article.slug}.png`;
+
+const syndicationLinks = [
+  article.syndication?.devto && { label: 'Dev.to', url: article.syndication.devto },
+  article.syndication?.hashnode && { label: 'Hashnode', url: article.syndication.hashnode },
+  article.syndication?.substack && { label: 'Substack', url: article.syndication.substack },
+].filter(Boolean) as { label: string; url: string }[];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: article.title,
+  description: article.description,
+  datePublished: article.pubDate.toISOString(),
+  dateModified: (article.updatedDate ?? article.pubDate).toISOString(),
+  author: {
+    '@type': 'Person',
+    name: siteConfig.name,
+    url: siteConfig.url,
+  },
+  publisher: {
+    '@type': 'Person',
+    name: siteConfig.name,
+    url: siteConfig.url,
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': canonical,
+  },
+  image: ogImage,
+  keywords: article.tags.join(', '),
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.url },
+    { '@type': 'ListItem', position: 2, name: 'Writing', item: `${siteConfig.url}/writing` },
+    { '@type': 'ListItem', position: 3, name: article.title, item: canonical },
+  ],
+};
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} canonical={canonical} ogImage={ogImage} ogType="article" markdownTwin={`/writing/${article.slug}.md`}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} is:inline />
+
+  <section class="relative overflow-hidden px-4 pb-11 pt-11 sm:pt-16" aria-labelledby="article-heading">
+    <div class="gradient-mesh" aria-hidden="true">
+      <div class="mesh-blob"></div>
+    </div>
+
+    <div class="relative z-10 mx-auto max-w-3xl">
+      <nav aria-label="Breadcrumb" class="text-sm text-muted">
+        <a href="/writing" class="hover:text-[var(--accent)]">Writing</a>
+        <span aria-hidden="true"> / </span>
+        <span>{article.title}</span>
+      </nav>
+
+      <h1 id="article-heading" class="mt-4 text-balance">{article.title}</h1>
+      <p class="mt-4 text-lg text-muted">{article.description}</p>
+
+      <div class="mt-6 flex flex-wrap items-center gap-3 font-mono text-xs text-muted">
+        <time datetime={article.pubDate.toISOString()}>{formatLongDate(article.pubDate)}</time>
+        <span aria-hidden="true">·</span>
+        <span>{readingTime}</span>
+        {article.updatedDate && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>Updated {formatLongDate(article.updatedDate)}</span>
+          </>
+        )}
+      </div>
+
+      {article.tags.length > 0 && (
+        <ul class="mt-4 flex flex-wrap gap-2">
+          {article.tags.map((tag) => (
+            <li>
+              <a
+                href={`/writing/tags/${slugifyTag(tag)}`}
+                class="inline-flex min-h-11 items-center rounded-full bg-[var(--surface-glass-strong)] px-3 py-1 text-xs text-muted transition-colors duration-200 hover:text-[var(--accent)]"
+              >
+                {tag}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {syndicationLinks.length > 0 && (
+        <p class="mt-4 text-sm text-muted">
+          Also published on{' '}
+          {syndicationLinks.map((link, i) => (
+            <>
+              <a href={link.url} target="_blank" rel="noopener noreferrer" class="text-[var(--accent)] underline underline-offset-2">
+                {link.label}
+              </a>
+              {i < syndicationLinks.length - 1 ? ', ' : ''}
+            </>
+          ))}
+        </p>
+      )}
+    </div>
+  </section>
+
+  <section class="px-4 pb-11 sm:pb-16">
+    <div class="mx-auto grid max-w-5xl grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_240px]">
+      <article id="article-body" class="container-prose prose-article">
+        <Content components={{ Callout }} />
+      </article>
+
+      <aside class="hidden lg:block">
+        <div class="sticky top-24">
+          <TableOfContents headings={headings} />
+        </div>
+      </aside>
+    </div>
+
+    <nav aria-label="Article navigation" class="mx-auto mt-16 flex max-w-3xl flex-col gap-4 border-t border-[var(--border-glass)] pt-8 sm:flex-row sm:justify-between">
+      {prevArticle ? (
+        <a href={`/writing/${prevArticle.slug}`} class="glass flex min-h-11 flex-1 flex-col gap-1 rounded-[var(--radius-md)] p-4 transition-transform duration-200 hover:-translate-y-1">
+          <span class="text-xs text-muted">&larr; Older</span>
+          <span class="font-medium text-[var(--text)]">{prevArticle.title}</span>
+        </a>
+      ) : <div class="flex-1" />}
+      {nextArticle ? (
+        <a href={`/writing/${nextArticle.slug}`} class="glass flex min-h-11 flex-1 flex-col gap-1 rounded-[var(--radius-md)] p-4 text-right transition-transform duration-200 hover:-translate-y-1">
+          <span class="text-xs text-muted">Newer &rarr;</span>
+          <span class="font-medium text-[var(--text)]">{nextArticle.title}</span>
+        </a>
+      ) : <div class="flex-1" />}
+    </nav>
+
+    <div class="mx-auto mt-16 max-w-3xl">
+      <SubstackEmbed variant="panel" />
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // Tiny, framework-free copy-to-clipboard button injected onto every code block.
+  // Runs once per page load; no state beyond a 2s "Copied" label reset.
+  for (const pre of document.querySelectorAll('#article-body pre')) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'code-copy-btn';
+    button.textContent = 'Copy';
+    button.setAttribute('aria-label', 'Copy code to clipboard');
+    pre.appendChild(button);
+
+    button.addEventListener('click', async () => {
+      const code = pre.querySelector('code')?.textContent ?? '';
+      try {
+        await navigator.clipboard.writeText(code);
+        button.textContent = 'Copied';
+      } catch {
+        button.textContent = 'Failed';
+      }
+      setTimeout(() => {
+        button.textContent = 'Copy';
+      }, 2000);
+    });
+  }
+</script>
+
+<style>
+  /* Typographic prose styling for the MDX article body — 65-75ch reading column (spec 7). */
+  .prose-article {
+    max-width: 70ch;
+  }
+
+  .prose-article :global(h2) {
+    margin-top: 2.5rem;
+    font-size: var(--font-size-h3);
+  }
+
+  .prose-article :global(h3) {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+  }
+
+  .prose-article :global(p) {
+    margin-top: 1rem;
+    color: var(--text-muted);
+  }
+
+  .prose-article :global(ul),
+  .prose-article :global(ol) {
+    margin-top: 1rem;
+    padding-left: 1.25rem;
+    color: var(--text-muted);
+  }
+
+  .prose-article :global(li) {
+    margin-top: 0.5rem;
+  }
+
+  .prose-article :global(li)::marker {
+    color: var(--accent);
+  }
+
+  .prose-article :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .prose-article :global(blockquote) {
+    margin-top: 1.5rem;
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .prose-article :global(code) {
+    background: var(--surface-glass-strong);
+    padding: 0.15em 0.4em;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+
+  .prose-article :global(pre) {
+    position: relative;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+  }
+
+  .prose-article :global(pre code) {
+    background: none;
+    padding: 0;
+  }
+
+  .prose-article :global(.code-copy-btn) {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    min-height: 32px;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-sm);
+    background: var(--surface-glass-strong);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    border: 1px solid var(--border-glass);
+    cursor: pointer;
+  }
+
+  .prose-article :global(img) {
+    margin-top: 1.5rem;
+    border-radius: var(--radius-md);
+  }
+
+  /* Footnotes (remark-gfm / rehype footnote syntax) */
+  .prose-article :global(.footnotes) {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-glass);
+    font-size: 0.875rem;
+  }
+
+  .prose-article :global(.footnotes ol) {
+    padding-left: 1.25rem;
+  }
+</style>

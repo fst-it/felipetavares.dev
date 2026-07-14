@@ -1,0 +1,149 @@
+---
+/**
+ * Journey career-path line (addendum V2b, thread item 4): a continuous SVG path connecting the
+ * role chapters on /experience, scrub-drawn with ScrollTrigger as the user scrolls. Visually
+ * consistent with ScrollProgressThread — same stroke color/glow language (--accent + accent-glow).
+ *
+ * The path geometry is computed at runtime from each `.journey-chapter`'s position (client-side
+ * script below), since chapter heights vary with content and viewport — there's no static
+ * coordinate to hand-author here. Desktop gets a gentle zig-zag between chapter midpoints;
+ * mobile (<=640px) simplifies to a straight vertical line, per spec. Motion off: the line renders
+ * fully drawn and static (no scrub).
+ *
+ * V5a fix 3b — owner: "renders as a THICK blue ribbon crossing OVER cards and text". Root causes:
+ *   1. `stroke-width="2"` is in the SVG's own coordinate space, which was a narrow `viewBox="0 0
+ *      24 totalHeight"` stretched via `preserveAspectRatio="none"` to fill the FULL WIDTH of the
+ *      (up to 900px+) chapter column — 2 viewBox-units out of 24 is ~8% of that rendered width,
+ *      i.e. dozens of real pixels thick, not the thin 2-3px line the rest of the site uses
+ *      (ScrollProgressThread). Fixed via `vector-effect: non-scaling-stroke`, which keeps the
+ *      stroke's rendered width in actual screen pixels regardless of the viewBox/container scale
+ *      — the same fixed-width feel as `.scroll-thread`'s 3px, sized down slightly (2px) since this
+ *      line sits beside body text rather than at a page edge.
+ *   2. The wrap was `w-full` (the full card-column width) while the cards themselves only leave a
+ *      `pl-6`/`sm:pl-8` (24px/32px) gutter down the left edge (see index.astro's `<ol>`) — so the
+ *      old `xFor` zig-zag (4 and 12 viewBox-units, out of 24 mapped across that FULL width) placed
+ *      the line 150-450px in from the left, deep inside the cards' own content area, not in the
+ *      gutter beside them. Fixed by shrinking the wrap itself to exactly the gutter's width
+ *      (`w-6 sm:w-8`, matching the `<ol>`'s padding) and reworking `xFor`/the viewBox to that
+ *      narrower coordinate space — the zig-zag now stays entirely within the gutter, "routed down
+ *      the spine between/beside cards," never crossing into card content.
+ *   3. No explicit stacking order relative to the (non-positioned, normal-flow) card column, so
+ *      this `position: absolute` wrapper could paint over static content it happened to overlap.
+ *      Fixed with an explicit `z-index: 0` here and `z-index: 1` + `position: relative` on the
+ *      chapter `<ol>` in index.astro, guaranteeing the line always renders BEHIND the cards.
+ */
+---
+
+<div class="journey-path-wrap pointer-events-none absolute inset-y-0 left-0 z-0 hidden w-6 sm:block sm:w-8" aria-hidden="true">
+  <svg class="journey-path-svg h-full w-full overflow-visible" preserveAspectRatio="none">
+    <path class="journey-path-line" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" />
+  </svg>
+</div>
+
+<script>
+  import gsap from 'gsap';
+  import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { motionEnabled } from '../../lib/motion';
+
+  gsap.registerPlugin(DrawSVGPlugin, ScrollTrigger);
+
+  function buildPath() {
+    const wrap = document.querySelector<HTMLElement>('.journey-path-wrap');
+    const svg = document.querySelector<SVGSVGElement>('.journey-path-svg');
+    const path = document.querySelector<SVGPathElement>('.journey-path-line');
+    const chapters = Array.from(document.querySelectorAll<HTMLElement>('.journey-chapter'));
+    if (!wrap || !svg || !path || chapters.length === 0) return null;
+
+    const wrapRect = wrap.getBoundingClientRect();
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    // The wrap is now sized to exactly the gutter's own width (see the `w-6 sm:w-8` markup
+    // above) — using its actual rendered width as the viewBox width means `xFor`'s coordinates
+    // are naturally gutter-relative and can never wander into the cards' content area (V5a fix
+    // 3b: "routed down the spine between/beside cards — never over text").
+    const gutterWidth = wrapRect.width;
+
+    // Desktop: a gentle zig-zag within the gutter, alternating x per chapter index (deterministic,
+    // not random) — 30%/70% of the gutter width keeps a visible wiggle without touching either
+    // edge. Mobile: a single straight line through the gutter's center (spec: "simpler straight/
+    // gently-curved line" on small viewports).
+    function xFor(index: number): number {
+      return isMobile ? gutterWidth / 2 : gutterWidth * (index % 2 === 0 ? 0.3 : 0.7);
+    }
+
+    // Midpoint of each chapter, relative to the wrapper — the line's anchor points.
+    const points = chapters.map((chapter, i) => {
+      const rect = chapter.getBoundingClientRect();
+      const y = rect.top - wrapRect.top + rect.height / 2;
+      return { x: xFor(i), y };
+    });
+
+    let d = '';
+    points.forEach((p, i) => {
+      if (i === 0) {
+        d += `M ${p.x} ${p.y}`;
+      } else {
+        const prev = points[i - 1];
+        const midY = (prev.y + p.y) / 2;
+        d += ` C ${prev.x} ${midY}, ${p.x} ${midY}, ${p.x} ${p.y}`;
+      }
+    });
+
+    const totalHeight = wrapRect.height;
+    svg.setAttribute('viewBox', `0 0 ${gutterWidth} ${totalHeight}`);
+    path.setAttribute('d', d);
+    return path;
+  }
+
+  function init() {
+    const path = buildPath();
+    if (!path) return;
+
+    if (!motionEnabled()) {
+      // Static, fully drawn — no scrub (spec: "Motion off: line rendered complete, static").
+      gsap.set(path, { drawSVG: '100%' });
+      return;
+    }
+
+    gsap.set(path, { drawSVG: '0%' });
+    ScrollTrigger.create({
+      trigger: '.journey-path-wrap',
+      start: 'top 80%',
+      end: 'bottom bottom',
+      scrub: 0.5,
+      onUpdate: (self) => {
+        gsap.set(path, { drawSVG: `0% ${self.progress * 100}%` });
+      },
+    });
+  }
+
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(init);
+  } else {
+    setTimeout(init, 200);
+  }
+
+  // Chapter layout can shift after fonts/images finish loading or on resize — rebuild the path
+  // (ScrollTrigger.refresh() picks up the new trigger bounds automatically on resize already;
+  // this covers the path geometry itself).
+  window.addEventListener('resize', () => {
+    const path = buildPath();
+    if (path && !motionEnabled()) gsap.set(path, { drawSVG: '100%' });
+  });
+</script>
+
+<style>
+  .journey-path-line {
+    filter: drop-shadow(0 0 6px var(--accent-glow));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .journey-path-line {
+      filter: none;
+    }
+  }
+
+  html[data-motion='off'] .journey-path-line {
+    filter: none;
+  }
+</style>

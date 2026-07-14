@@ -1,0 +1,183 @@
+---
+title: "felipetavares.dev"
+tagline: "This site, engineered like a product — not a template."
+northStar: "Proof that enterprise architectural discipline holds at personal-brand scale — built and shipped at $0/month."
+problem: "Personal-brand sites default to templates or paid CMSes. This one had to read as engineered, with $0/month in recurring costs and no vendor lock-in."
+outcomes:
+  - "$0/month recurring cost, running entirely on Cloudflare's free tier"
+  - "Three equivalent content-editing paths — file, Claude Code, or a browser UI — no seat-priced CMS"
+  - "Redaction gate in CI: no employer-tied financials ever reach the public site"
+status: "active"
+roleLine: "Sole architect & builder"
+stack:
+  - "Astro 5 (islands architecture)"
+  - "React (client islands only)"
+  - "TypeScript, hexagonal ports & adapters"
+  - "Tailwind CSS v4"
+  - "Cloudflare Pages + Workers (hybrid output)"
+  - "Cloudflare Workers AI + Vectorize (RAG chatbot)"
+  - "Cloudflare KV (rate limiting)"
+  - "Resend (email delivery)"
+  - "Cloudflare Turnstile (bot protection)"
+  - "Astro content collections (git-based CMS)"
+  - "Keystatic (local editing UI)"
+  - "GSAP, Lenis, OGL (motion stack)"
+  - "MCP server (packages/mcp)"
+  - "Vitest + Playwright (testing)"
+  - "Zod (schema validation)"
+repoUrl: "https://github.com/fst-it/fst_website"
+featured: true
+order: 2
+metrics:
+  - label: "Recurring infra cost"
+    value: "$0/month"
+  - label: "Editing paths"
+    value: "3 (file, Claude Code, Keystatic UI)"
+  - label: "Content JS budget"
+    value: "<50KB on content pages"
+deepDive:
+  problem:
+    summary: "A personal-brand site with the same discipline as an enterprise system — on a $0 budget."
+    detail: "The brief: build a personal-brand site that reads as engineered, not templated — with a hard $0/month recurring-cost constraint, domain already owned. That ruled out a seat-priced hosted CMS and a pay-per-request LLM API as defaults."
+  approach:
+    summary: "Hexagonal ports & adapters underneath, Astro islands on top."
+    detail: "src/core/ is pure TypeScript with zero framework or provider imports, organized as hexagonal ports & adapters (ContentRepository, LlmProvider, EmbeddingIndex, EmailSender, RateLimiter). React is used only for islands that genuinely need client-side interactivity, so content pages ship close to zero client JS."
+  architecture:
+    summary: "Astro 5 hybrid output on Cloudflare — prerendered pages, Workers for the rest."
+    detail: "Pages prerender to the CDN at build time; the handful of routes that need a server (/api/contact, /api/chat) run as Workers functions. Cloudflare's free tier supplies Pages/Workers hosting, KV, Vectorize, and Workers AI as the primary LLM provider, all inside headroom a personal site won't bump into."
+  results:
+    summary: "$0/month recurring, 3 equivalent content-editing paths, sub-50KB content-page JS."
+    detail: "Content is git-backed Astro content collections edited through three equivalent paths — direct file edit, Claude Code, or the Keystatic UI. A redaction gate enforces no employer-tied financial figures or headcounts anywhere on the public site, scanned in CI on every commit."
+---
+
+felipetavares.dev is one of two proof points on this site, alongside Selfwright: the same
+architectural discipline an enterprise system demands — ports & adapters, a hard cost constraint,
+a content pipeline with an enforced redaction rule — applied at personal-brand scale. The cards
+above give the shape; what follows is the full picture.
+
+## Architecture
+
+The site runs on **Astro 5** in hybrid output on the **Cloudflare** adapter — pages prerender to
+the CDN at build time; the handful of routes that need a server (`/api/contact`, `/api/chat`) run
+as Workers functions. React is used only for **islands** — components that genuinely need
+client-side interactivity (theme toggle, mobile menu, contact form, chat widget, accessibility
+panel) — so content pages ship close to zero client JS.
+
+Underneath, `src/core/` is pure TypeScript with zero framework or provider imports, organized as
+**hexagonal ports & adapters**: `ContentRepository`, `LlmProvider`, `EmbeddingIndex`,
+`EmailSender`, `RateLimiter`. Every page and API route imports through the port's single binding
+point (`src/config/site.ts`, `src/config/llm.ts`) — never an adapter directly. Swapping git for
+a hosted CMS, or Workers AI for a different model provider, is a new adapter file and a one-line
+config change, not a page-level rewrite.
+
+## The $0 stack
+
+The one non-negotiable constraint was **$0/month recurring**, domain already owned. That ruled out
+a seat-priced hosted CMS and a pay-per-request LLM API as the default path, and pointed at
+Cloudflare's free tier: Pages/Workers hosting, KV for rate limiting, Vectorize for embeddings, and
+**Workers AI as the primary LLM provider** (with Anthropic's API as an optional, config-swappable
+fallback) — all inside free-tier headroom a personal site won't bump into. Contact form email delivery
+runs through **Resend** (REST API, key stored as a Worker env binding). Bot protection on `/api/contact`
+uses **Cloudflare Turnstile** — server-side verification, sitekey public, secret stays in the Worker.
+
+## Git-based CMS, three editing modes
+
+Content is git-backed Astro content collections (MDX for articles/projects, JSON for roles/talks/
+site singletons) — one content model, edited through three equivalent paths: a direct file edit,
+Claude Code, or the **Keystatic** UI at `/keystatic` in dev (`storage.kind: 'local'` for now;
+GitHub-mode storage is a documented TODO pending a GitHub App). `astro.config.mjs` only registers
+the Keystatic integration outside `astro build`, so no admin routes exist in the deployed site.
+
+## Design system
+
+The site uses glass-card surfaces throughout (`backdrop-filter: blur() saturate()` with solid
+fallbacks), a token-first theming layer (one CSS file drives both dark and light themes through
+custom properties), and a Deep Signal hero — a vendored WebGL brain canvas that carries the
+site's own content (kinetic type, headline, CTAs) rather than placeholder copy. The galaxy
+backdrop (site-wide WebGL layer) sits below all page content and adapts to light and dark themes,
+scaling down to fine ink-speck density in light mode so content stays dominant.
+
+One design token source (`src/styles/tokens.css`) drives both themes through CSS custom
+properties switched by a single class on `<html>`. Tailwind v4's `@theme` block maps those
+tokens into utility classes, so no component hardcodes a hex value.
+
+## Redaction-gated content pipeline
+
+A hard content rule — no employer-tied financial figures or headcounts anywhere on the public
+site — is enforced editorially across role JSONs, the dossier, the home credibility strip,
+project MDX, and the chatbot's index. Metrics either use relative multiples ("cut integration
+cost by more than half"), magnitude bands ("8-figure portfolio"), or public non-financial facts.
+The chatbot's index is rebuilt after every redaction pass so it can't surface a pre-redaction
+figure from a stale chunk.
+
+## RAG chatbot with a provider router
+
+`/api/chat` streams answers grounded in this site's own content via Server-Sent Events. The
+retrieval index is built by `pnpm build-chat-index` (`scripts/build-chat-index.ts`), chunking
+articles, projects, roles, and site copy. `LlmRouter` tries Workers AI first and falls back to
+Anthropic without any component-level change. The chat launcher is a 56px avatar circle (the
+owner's raster brand glyph) with a green presence dot — no persistent server state, no PII
+storage.
+
+## The publish-kit
+
+`pnpm publish-kit <slug>` turns one canonical MDX article into four syndication artifacts —
+Substack HTML, a LinkedIn post, a Reddit framing note, an X thread — so writing is authored once
+and syndicated outward rather than rewritten per platform. Dev.to and Hashnode pull the RSS feed
+directly.
+
+## The /reading section
+
+`/reading` is a public log of books, articles, and papers with the owner's verdict on each —
+one way his judgment compounds in public rather than staying in private notes. Each entry carries
+a type, domains, and a verdict; filter chips let readers narrow by either axis.
+
+## Decisions
+
+**Astro over Next.js.** The site is mostly static, SEO-critical content read on commutes. Astro's
+islands architecture ships near-zero client JS on content pages by default; a Next.js app would
+have meant fighting its client-first defaults for a site that doesn't need app-router-grade
+client state.
+
+**Git-based CMS over Sanity/Payload from day one.** A hosted CMS adds a seat-priced dependency
+and a second source of truth before there's any evidence the git + Keystatic workflow can't keep
+up with actual publishing cadence. The `ContentRepository` port keeps that door open without
+paying for it now.
+
+**Workers AI first, Anthropic as fallback — not the reverse.** Workers AI is free within
+Cloudflare's tier and colocates with the rest of the stack; routing through it first keeps the
+chatbot inside the $0 budget for normal traffic, with a paid-API fallback available via config
+if quality or availability demands it.
+
+**Flip page-transition morphs skipped, in favor of stability.** The design spec included Astro
+View Transitions-driven Flip morphs between card and hero states. Landing the higher-value items
+— Lenis, section reveals, the accessibility control center, card magnetics — cleanly took
+priority; Flip remains a documented option.
+
+**The galaxy backdrop as a deliberate, logged budget exception.** The site-wide WebGL galaxy
+layer (React Bits Galaxy.tsx, MIT) adds motion-conditional render overhead. It's gated behind
+`motionEnabled() && fx !== 'off'`, scales to low-density on mobile, and near-disappears in light
+mode. The trade-off is logged; a config flag drops it instantly if needed.
+
+<Callout title="More decisions, the full stack, a changelog">
+This page covers the shape of the build. `/engineering` goes further: six more decision records
+rewritten executive-readable, every piece of the stack with its one honest reason, and a dated
+changelog distilled from this repo's real commit history — no marketing copy about engineering
+discipline, the discipline itself. [Read the engineering hub →](/engineering)
+</Callout>
+
+## What this demonstrates
+
+The same discipline used on enterprise systems — ports before adapters, a $0-forced architecture
+rather than a padded one, redaction as a hard content gate, a design system with one signature
+device — holds up on a constrained, real, shipped system. The decisions, stack rationale, and a
+dated changelog are on [/engineering](/engineering).
+
+The reasoning behind the architectural decisions is also written up as an article: [Why I Built
+This Site the Way I Did](/writing/why-i-built-this-site-the-way-i-did).
+
+## Status
+
+Active — this is the live, deployed site you're reading. It ships in phases (documented in the
+addendum's delivery table), each gated on `pnpm check`, `pnpm test`, `pnpm build`, and a
+Lighthouse/axe pass before merge.

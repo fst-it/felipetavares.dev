@@ -1,0 +1,45 @@
+{
+  "name": "felipetavares-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing felipetavares.dev's published content and chatbot to AI agents.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Felipe Tavares",
+  "homepage": "https://felipetavares.dev/mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fst-it/fst_website",
+    "directory": "packages/mcp"
+  },
+  "bin": {
+    "felipetavares-mcp": "./dist/stdio.js"
+  },
+  "main": "./dist/stdio.js",
+  "files": [
+    "dist/stdio.js",
+    "dist/stdio.js.map",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "build-content-snapshot": "tsx scripts/build-content-snapshot.ts",
+    "dev:stdio": "tsx watch src/stdio.ts",
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "6.3.11",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}

@@ -1,0 +1,275 @@
+/*
+ * Design tokens — spec 6.2. Dark is default; light is opted into via
+ * `html.theme-light`. Both themes share one accent family.
+ */
+
+:root,
+html.theme-dark {
+  color-scheme: dark;
+
+  /* Color */
+  --bg: #0b0e14;
+  --surface: #11151f;
+  --surface-glass: rgb(255 255 255 / 4%);
+  --surface-glass-strong: rgb(255 255 255 / 8%);
+  --surface-header-scrolled: rgb(11 14 20 / 96%);
+  --border-glass: rgb(255 255 255 / 10%);
+  --specular: rgb(255 255 255 / 30%);
+  --text: #e6eaf2;
+  --text-muted: #8a93a6;
+
+  --accent: #4f8cff;
+  --accent-2: #7db2ff;
+  --accent-glow: rgb(79 140 255 / 45%);
+  --accent-glow-strong: rgb(79 140 255 / 60%);
+  --accent-contrast: #06101f;
+
+  /* Brand warm — signal orange for the left hemisphere of the mind mark and the
+     bridge synapse gradient. NOT the interactive accent (see --accent-orange in C2);
+     this token is brand-identity-only so it stays orange in ALL accent modes. */
+  --brand-warm: #F97316;
+  --brand-warm-light: #fb923c;
+
+  /* Kinetic-type 4-color accent cycle (V5b C2: amber replaced by signal orange) — AA-verified
+     (>=4.5:1) against --bg in both themes; same "electric, executive-tech" family as --accent.
+     --accent-orange dark: #F97316 contrast 6.89:1. */
+  --accent-violet: #9580ff;
+  --accent-cyan: #3fd7c7;
+  --accent-orange: #F97316;
+
+  /*
+   * Glow-safe color tokens (V3-polish commit 2) — deliberately deep/saturated hues for glow
+   * layers (NeuralField.tsx WebGL blobs, SVG glow filters) that consume raw color, NOT text. The
+   * --accent-violet/-cyan/-amber tokens above are AA-contrast-tuned for TEXT against --bg — using
+   * them for a wash/glow layer is the wrong job (that's what previously made the light-theme wash
+   * read as washed-out AA-safe pastels instead of vivid light). Dark theme's glow tokens can just
+   * mirror the already-vivid accent-* values; light theme's are tuned separately below.
+   */
+  --glow-violet: #9580ff;
+  --glow-cyan: #3fd7c7;
+  --glow-orange: #F97316;
+
+  --success: #3ecf8e;
+  --online: #22c55e;
+  --warn: #ffb84f;
+
+  --noise-opacity: 0.03;
+  --shadow-ambient: 0 1px 0 0 rgb(255 255 255 / 6%) inset, 0 20px 60px -20px rgb(0 0 0 / 60%);
+}
+
+html.theme-light {
+  color-scheme: light;
+
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --surface-glass: rgb(20 23 31 / 4%);
+  --surface-glass-strong: rgb(20 23 31 / 6%);
+  --surface-header-scrolled: rgb(250 250 247 / 97%);
+  --border-glass: rgb(20 23 31 / 8%);
+  --specular: rgb(255 255 255 / 70%);
+  --text: #14171f;
+  --text-muted: #565f73;
+
+  --accent: #2f6fe0;
+  --accent-2: #4f8cff;
+  /* Raised from 25% (V3-polish commit 2 — light theme read as flat/lifeless next to dark's neon
+     glow). --accent-glow-strong is for hero-scale glow layers that need real presence. */
+  --accent-glow: rgb(47 111 224 / 38%);
+  --accent-glow-strong: rgb(47 111 224 / 50%);
+  --accent-contrast: #ffffff;
+
+  /* Brand warm — light-theme variant: slightly darker for ink-on-ivory legibility. */
+  --brand-warm: #ea6c10;
+  --brand-warm-light: #F97316;
+
+  /* Kinetic-type 4-color accent cycle (V5b C2: amber replaced by signal orange) — AA-verified
+     (>=4.5:1) against --bg in both themes. TEXT-CONTRAST TUNED — do not reuse for glow/wash
+     layers, see --glow-* below.
+     --accent-orange light: #b84d08 contrast 4.89:1. */
+  --accent-violet: #6e48d0;
+  --accent-cyan: #0f7a85;
+  --accent-orange: #b84d08;
+
+  /*
+   * Glow-safe color tokens (V3-polish commit 2) — deliberately deep, saturated hues for glow
+   * layers (NeuralField.tsx, SVG glow filters) rather than the AA-text-tuned --accent-violet/
+   * -cyan/-amber above. Those text tokens are deliberately darkened/desaturated for >=4.5:1
+   * contrast against a light --bg — feeding them into a glow/wash renders as a faint, muddy
+   * pastel. These --glow-* tokens keep the vivid saturation of the dark-theme palette so the
+   * light theme reads as "vivid ink + soft luminosity" instead of washed out.
+   */
+  --glow-violet: #7c4dff;
+  --glow-cyan: #06b6a8;
+  --glow-orange: #e08a1e;
+
+  --success: #1f9d67;
+  --online: #22c55e;
+  --warn: #b5720a;
+
+  --noise-opacity: 0.02;
+  --shadow-ambient: 0 1px 0 0 rgb(255 255 255 / 60%) inset, 0 12px 40px -16px rgb(20 23 31 / 16%);
+}
+
+/*
+ * High-contrast theme variant (addendum V2c/section 7) — toggled via the a11y panel, persisted
+ * as `html[data-contrast="high"]` (src/components/islands/AccessibilityPanel.tsx). Raises
+ * text/muted/border contrast in both themes to >=7:1 for body text against --bg, and makes glass
+ * surfaces more opaque so content behind them doesn't dilute the contrast gain.
+ */
+html[data-contrast='high'].theme-dark {
+  --text: #ffffff;
+  --text-muted: #c7cddb;
+  --border-glass: rgb(255 255 255 / 35%);
+  --surface-glass: rgb(11 14 20 / 82%);
+  --surface-glass-strong: rgb(11 14 20 / 92%);
+  --accent-2: #a9c8ff;
+}
+
+html[data-contrast='high'].theme-light {
+  --text: #000000;
+  --text-muted: #33394a;
+  --border-glass: rgb(20 23 31 / 35%);
+  --surface-glass: rgb(255 255 255 / 88%);
+  --surface-glass-strong: rgb(255 255 255 / 96%);
+  --accent: #1c4fb0;
+}
+
+:root {
+  /*
+   * --accent-surface (V5b C2) — consumed by CTA surfaces, border-beam, and the scroll thread
+   * in "gradient" accent mode. Default (and blue/orange modes): same as --accent so nothing
+   * changes without a data-accent override. Gradient mode sets this to a blue→orange gradient
+   * via background shorthand; consumers must use `background: var(--accent-surface)` (not
+   * `background-color`) to receive the gradient value in gradient mode.
+   */
+  --accent-surface: var(--accent);
+}
+
+:root {
+  /* Space (4px grid) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+
+  /* Radius */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  /* Fluid type scale */
+  --font-size-h1: clamp(2.5rem, 1.9rem + 2.6vw, 4.5rem);
+  --font-size-h2: clamp(2rem, 1.6rem + 1.8vw, 3rem);
+  --font-size-h3: clamp(1.5rem, 1.3rem + 0.9vw, 2rem);
+  --font-size-body: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --font-size-small: 0.875rem;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-micro: 200ms;
+  --duration-reveal: 500ms;
+}
+
+/*
+ * Larger text (addendum V2c/section 7) — `html[data-text="large"]` bumps the root font-size,
+ * which every `rem`-based token and Tailwind utility scales from; the fluid `clamp()` type scale
+ * above is already viewport-relative, so this reads as a modest, layout-safe bump rather than a
+ * second type scale. ~112.5-118.75% per spec; 118.75% (19px root) chosen as the single step.
+ */
+html[data-text='large'] {
+  font-size: 118.75%;
+}
+
+/*
+ * Accent theme overrides (V5b C2) — token-layer only. html[data-accent] remaps the accent
+ * family so every consumer picks up the change without any component-level branching.
+ *
+ * "blue" (default): current mapping, no override needed.
+ *
+ * "orange": --accent swaps to the orange family (orange becomes the primary interactive accent;
+ * blue becomes the secondary/supporting signal). The bridge synapse and BrandMark left-hemisphere
+ * color are --brand-warm which is NOT overridden here — they are brand identity, not theme.
+ *
+ * "gradient": --accent stays blue, but --accent-surface becomes a blue→orange gradient so any
+ * consumer that uses `background: var(--accent-surface)` (CTAs, border-beam, scroll thread) gets
+ * the gradient treatment. Components must use background (not background-color) to receive it.
+ */
+
+/* Orange accent — dark (default) and explicitly dark.
+   Combined selectors avoid the cascade tie where html[data-accent='orange'] (lower specificity)
+   and html[data-accent='orange'].theme-dark (higher specificity) in the same comma group could
+   shadow each other inconsistently on WebKit. Both rules are explicit + non-overlapping. */
+:root[data-accent='orange'],
+html.theme-dark[data-accent='orange'] {
+  --accent:          #F97316;
+  --accent-2:        #fb923c;
+  --accent-glow:     rgb(249 115 22 / 45%);
+  --accent-glow-strong: rgb(249 115 22 / 60%);
+  --accent-contrast: #06101f;
+  /* In orange mode, blue shifts to the secondary signal role */
+  --accent-orange:   #4f8cff;
+}
+
+html.theme-light[data-accent='orange'] {
+  --accent:          #b84d08;
+  --accent-2:        #d96008;
+  --accent-glow:     rgb(184 77 8 / 38%);
+  --accent-glow-strong: rgb(184 77 8 / 50%);
+  --accent-contrast: #ffffff;
+  --accent-orange:   #2f6fe0;
+}
+
+/* Gradient accent — dark (default) and explicitly dark. Same combined-selector fix. */
+:root[data-accent='gradient'],
+html.theme-dark[data-accent='gradient'] {
+  /* --accent stays blue; --accent-surface becomes a blue→orange gradient for CTA surfaces */
+  --accent-surface: linear-gradient(135deg, #4f8cff 0%, #F97316 100%);
+}
+
+html.theme-light[data-accent='gradient'] {
+  --accent-surface: linear-gradient(135deg, #2f6fe0 0%, #b84d08 100%);
+}
+
+/*
+ * Native form controls — explicit color-scheme so UA-rendered popups (select dropdowns,
+ * scrollbars, date pickers) match the page theme. color-scheme is an inherited property
+ * and is already set on :root / html.theme-dark; this explicit rule covers browsers
+ * (notably mobile Safari) that render native control popups in a separate OS-level layer
+ * and don't reliably inherit from the document root.
+ */
+:root select,
+html.theme-dark select {
+  color-scheme: dark;
+}
+
+html.theme-light select {
+  color-scheme: light;
+}
+
+/*
+ * Select option colours — explicit background-color and color on <option> elements.
+ * Chromium/Edge on Windows ignores color-scheme when rendering the native select popup:
+ * the OS-rendered list renders in the system default (light) even when the page is dark.
+ * <option> elements DO honour background-color and color directly, so setting them
+ * explicitly is the robust cross-platform fix. root-level color-scheme (already on :root /
+ * html.theme-dark above) flips scrollbars and other native chrome; these rules cover the
+ * popup list itself.
+ *
+ * Using CSS custom properties keeps this tokens-only: --surface provides a dark navy
+ * (#11151f) in dark mode and white (#ffffff) in light mode; --text provides the matching
+ * foreground in both themes.
+ */
+html.theme-dark option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+html.theme-light option {
+  background-color: var(--surface);
+  color: var(--text);
+}

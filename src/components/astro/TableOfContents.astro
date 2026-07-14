@@ -1,0 +1,36 @@
+---
+export interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+export interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+// Deep-dive bodies start their content at h2 (h1 is the page hero title); keep the TOC to
+// h2/h3 so it stays scannable rather than mirroring every heading level.
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{
+  tocHeadings.length >= 2 && (
+    <nav aria-label="Table of contents" class="glass rounded-[var(--radius-md)] p-5">
+      <p class="mb-3 font-mono text-xs uppercase tracking-wider text-muted">On this page</p>
+      <ul class="flex flex-col gap-2 text-sm">
+        {tocHeadings.map((heading) => (
+          <li class={heading.depth === 3 ? 'pl-3' : ''}>
+            <a
+              href={`#${heading.slug}`}
+              class="text-muted transition-colors duration-200 hover:text-[var(--accent)]"
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}

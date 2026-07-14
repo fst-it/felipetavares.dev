@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  // Remote MCP transport (mcp.felipetavares.dev) — commit 3. NOT deployed as part of this change
+  // (no Cloudflare account connected); this is the config + code ready for that step, following
+  // the same "own account, deploy later" pattern the root wrangler.jsonc documents for the
+  // chatbot. See docs/mcp.md for full activation steps.
+  "name": "felipetavares-mcp",
+  "main": "dist/worker.js",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Own KV namespace rather than reusing the site's RATE_LIMIT_KV — this Worker is a separate
+  // deployable with its own account-level lifecycle; sharing a physical KV id across two
+  // wrangler.jsonc files is a real, deliberate choice to make at deploy time (see docs/mcp.md),
+  // not one to hardcode here. Create once before first deploy:
+  //   wrangler kv namespace create MCP_RATE_LIMIT_KV
+  "kv_namespaces": [
+    {
+      "binding": "RATE_LIMIT_KV",
+      "id": "f01a7e512d8249939a50d676be0f7626"
+    }
+  ],
+
+  "routes": [
+    { "pattern": "mcp.felipetavares.dev", "custom_domain": true }
+  ]
+
+  // No `ai`/`vectorize` bindings: search_content reads the committed src/generated/chat-chunks.json
+  // via LexicalIndex (same dev/v1-prod adapter the site itself uses) — this package has no
+  // dependency on Workers AI or Vectorize being provisioned. ask_felipe's LLM call is env-driven
+  // (ANTHROPIC_API_KEY as a `wrangler secret`) via src/config.ts, matching the site's own
+  // getLlmProvider() pattern — no Workers AI binding needed here either.
+}

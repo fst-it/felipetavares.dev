@@ -1,0 +1,25 @@
+{
+  "org": "Siemens",
+  "title": "Order-to-Cash Solution Lead",
+  "start": "2018-07",
+  "end": "2019-07",
+  "location": "Lisbon, PT",
+  "additionalLocation": "Munich, DE",
+  "arc": "Owning the order-to-cash solution on Siemens' Global SAP S/4HANA rollout",
+  "arcPt": "Liderando a solução order-to-cash no rollout global do SAP S/4HANA da Siemens",
+  "impact": [
+    {
+      "metric": "Global O2C ownership",
+      "narrative": "Led the order-to-cash solution on the Global SAP S/4HANA rollout — responsible for process design, system configuration, and delivery across multiple markets.",
+      "narrativePt": "Liderou a solução order-to-cash no rollout global do SAP S/4HANA — responsável por design de processos, configuração do sistema e entrega em múltiplos mercados."
+    },
+    {
+      "metric": "Run-cost reduction",
+      "narrative": "Delivered a standardized, best-practice order-to-cash build that significantly reduced run-cost for the programme.",
+      "narrativePt": "Entregou um build order-to-cash padronizado e de melhores práticas que reduziu significativamente o custo operacional do programa."
+    }
+  ],
+  "domains": ["SAP Delivery, Strategy & Architecture", "Portfolio & Program Management"],
+  "order": 5,
+  "technologies": ["SAP S/4HANA"]
+}

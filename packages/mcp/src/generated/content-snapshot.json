@@ -1,0 +1,841 @@
+{
+  "articles": [
+    {
+      "slug": "why-i-built-this-site-the-way-i-did",
+      "frontmatter": {
+        "title": "Why I Built This Site the Way I Did",
+        "description": "The reasoning behind felipetavares.dev: Astro islands, hexagonal ports, a $0 stack forced by a hard constraint, and what I'd do differently now that more of it is shipped.",
+        "pubDate": "2026-07-05T00:00:00.000Z",
+        "tags": [
+          "Architecture",
+          "AI & Agentic Engineering"
+        ],
+        "draft": false
+      },
+      "body": "\n\nMost personal sites start with a template and end with a WordPress plugin problem. I wanted the\nopposite: a site whose own construction is a proof point for the kind of architecture leadership\nI write about. This is the story of the decisions behind felipetavares.dev — not a features list,\nbut the reasoning, including the parts I got wrong or deferred.\n\n## The brief I gave myself\n\nThe site had one non-negotiable constraint: **$0/month recurring**, domain already owned. Everything\nelse — the CMS, the chatbot, the hosting, the analytics — had to fit inside free tiers with enough\nheadroom that a personal site would never bump into a limit. That constraint did more design work\nthan any aesthetic preference. It ruled out a hosted CMS with seat pricing, ruled out a\npay-per-request LLM API as the default path, and pointed hard at a platform that already gives\ngenerous free compute: Cloudflare.\n\nIt also ruled out over-engineering. A personal brand site doesn't need a database, doesn't need\nauth, doesn't need a search cluster. The interesting problem here isn't scale — it's making a\ncontent-heavy, SEO-critical, occasionally-interactive site that stays fast, stays cheap, and stays\neasy to extend without a rewrite six months in.\n\n## Astro, and why islands over a full SPA\n\nThe site is built on **Astro 5** in static-first mode, with React used only for islands —\ncomponents that genuinely need client-side interactivity: the theme toggle, the mobile menu, the\ncontact form, the chat widget. Everything else — hero copy, navigation, article bodies, the\nprojects grid — ships as plain HTML with zero client JavaScript.\n\nThis matters for a site whose primary audience is a recruiter or a peer technologist skimming on\na phone during a commute. Shipping a full React SPA for mostly-static content means paying a\nhydration tax on every page for interactivity nobody asked for. Astro's islands architecture lets\nme keep that JavaScript budget close to zero on content pages and spend it only where it earns its\nkeep — a rule the design spec states explicitly as a performance budget (total JS on content pages\nunder 50KB, islands lazy-loaded).\n\nThe Cloudflare adapter runs the same codebase in **hybrid output**: pages are prerendered at build\ntime onto the CDN, and the handful of routes that genuinely need a server — `/api/contact`,\n`/api/chat` — run as Workers functions. One deployment target, two rendering modes, chosen per\nroute.\n\n## Hexagonal architecture for a site with \"no backend\"\n\nThe part that surprises people: this site has a `src/core/` directory with zero framework imports,\norganized as pure TypeScript entities, ports, and services — the same hexagonal (ports & adapters)\ndiscipline I'd use on a much larger system. For a marketing site, that can look like\nover-engineering. It isn't, for one specific reason: **the content source is a stated architecture\ndecision, not a foregone one.**\n\nContent lives in git today — Astro content collections reading MDX and JSON under `/content` —\nbut the design spec calls this out as adapter #1 of several possible ones, with a hosted CMS\n(Sanity, Payload) as a plausible future adapter if the editing experience ever needs to outgrow\ngit. The `ContentRepository` port is the seam:\n\n```ts\nexport interface ContentRepository {\n  getArticles(opts?: { includeDrafts?: boolean }): Promise<Article[]>;\n  getArticle(slug: string): Promise<Article | undefined>;\n  getProjects(): Promise<Project[]>;\n  // ...roles, talks, testimonials, site singletons\n}\n```\n\nEvery page imports `contentRepository` from `src/config/site.ts` — never the adapter directly.\n`GitContentRepository` is the only class that knows content lives in Astro collections. Swapping\nthat adapter for a hosted CMS later is a new file plus a one-line change in `config/site.ts`; zero\npage-level changes. The same pattern applies to the chatbot's LLM provider — Workers AI today,\nClaude or another provider via a config-driven router rather than hardcoded into a component.\n\nIs this the simplest possible thing that could work? No — a page that calls `getCollection()`\ndirectly would be simpler for exactly one content source. But I've built and rebuilt career-tooling\nsystems enough times to know that the \"just call the API directly\" version is the one that gets\nexpensive to change. The port costs a small amount of indirection up front and buys back an\nafternoon, not a rewrite, when the content backend changes.\n\n## A design that degrades instead of breaking\n\nThe visual language is deliberately layered so it degrades rather than breaking. Glass cards use\n`backdrop-filter: blur() saturate()` with a `@supports` fallback to a solid surface. The\nsite-wide galaxy backdrop (WebGL, React Bits Galaxy.tsx under an MIT license) is gated behind\nmotion preferences and renders near-invisible in light mode — fine ink specks instead of glowing\nstars — so content stays dominant. The hero (a vendored WebGL brain canvas) carries the site's\nown content, not placeholder copy, so it's readable even if the animation never fires.\n\nOne design token source (`src/styles/tokens.css`) drives both dark and light themes through CSS\ncustom properties, switched by a single class on `<html>`. Tailwind v4's `@theme` block maps\nthose tokens into utility classes, so component markup never hardcodes a hex value — change a\ntoken, both themes update everywhere at once.\n\nThe principle: no visual feature is load-bearing for content or navigation. That's the actual\naccessibility contract, not an afterthought applied after the fact.\n\n## What this article demonstrates\n\nThis article is a small integration test of the publishing pipeline: `/writing` lists it by tag\nand reading time, this page renders a table of contents from its headings, and the publish-kit\nscript (`pnpm publish-kit <slug>`) can turn this single MDX file into a Substack-ready HTML\nexport, a LinkedIn post, a Reddit framing note, and an X thread — without hand-copying content\nbetween five editors. Write once in the canonical source, syndicate outward through generated\nartifacts rather than manual rewrites.\n\n## What I'd reconsider\n\nTwo trade-offs I'd revisit. First, Keystatic runs in local mode in dev only for now —\nGitHub-mode editing (so I can publish from a phone without a terminal) needs a GitHub App I\nhaven't set up yet. The git workflow is fast enough that this hasn't blocked anything, but it's\nthe gap between \"works\" and \"works from anywhere.\"\n\nSecond, I underestimated how fast the design would evolve. The initial architectural decisions —\nAstro islands, hexagonal core, $0 Cloudflare stack — held up well across multiple design phases.\nBut I spent time describing a design (liquid glass, gradient mesh hero) that got replaced before\nthe site shipped publicly. The architecture was the right thing to pin in writing early; the\nvisual identity less so.\n\nThe chatbot is live and uses the same `core/ports` pattern I planned for it. That part went\nexactly as intended.\n"
+    }
+  ],
+  "projects": [
+    {
+      "slug": "felipetavares-dev",
+      "frontmatter": {
+        "title": "felipetavares.dev",
+        "tagline": "This site, engineered like a product — not a template.",
+        "northStar": "Proof that enterprise architectural discipline holds at personal-brand scale — built and shipped at $0/month.",
+        "problem": "Personal-brand sites default to templates or paid CMSes. This one had to read as engineered, with $0/month in recurring costs and no vendor lock-in.",
+        "outcomes": [
+          "$0/month recurring cost, running entirely on Cloudflare's free tier",
+          "Three equivalent content-editing paths — file, Claude Code, or a browser UI — no seat-priced CMS",
+          "Redaction gate in CI: no employer-tied financials ever reach the public site"
+        ],
+        "status": "active",
+        "roleLine": "Sole architect & builder",
+        "stack": [
+          "Astro 5 (islands architecture)",
+          "React (client islands only)",
+          "TypeScript, hexagonal ports & adapters",
+          "Tailwind CSS v4",
+          "Cloudflare Pages + Workers (hybrid output)",
+          "Cloudflare Workers AI + Vectorize (RAG chatbot)",
+          "Cloudflare KV (rate limiting)",
+          "Resend (email delivery)",
+          "Cloudflare Turnstile (bot protection)",
+          "Astro content collections (git-based CMS)",
+          "Keystatic (local editing UI)",
+          "GSAP, Lenis, OGL (motion stack)",
+          "MCP server (packages/mcp)",
+          "Vitest + Playwright (testing)",
+          "Zod (schema validation)"
+        ],
+        "repoUrl": "https://github.com/fst-it/fst_website",
+        "featured": true,
+        "order": 2,
+        "metrics": [
+          {
+            "label": "Recurring infra cost",
+            "value": "$0/month"
+          },
+          {
+            "label": "Editing paths",
+            "value": "3 (file, Claude Code, Keystatic UI)"
+          },
+          {
+            "label": "Content JS budget",
+            "value": "<50KB on content pages"
+          }
+        ],
+        "deepDive": {
+          "problem": {
+            "summary": "A personal-brand site with the same discipline as an enterprise system — on a $0 budget.",
+            "detail": "The brief: build a personal-brand site that reads as engineered, not templated — with a hard $0/month recurring-cost constraint, domain already owned. That ruled out a seat-priced hosted CMS and a pay-per-request LLM API as defaults."
+          },
+          "approach": {
+            "summary": "Hexagonal ports & adapters underneath, Astro islands on top.",
+            "detail": "src/core/ is pure TypeScript with zero framework or provider imports, organized as hexagonal ports & adapters (ContentRepository, LlmProvider, EmbeddingIndex, EmailSender, RateLimiter). React is used only for islands that genuinely need client-side interactivity, so content pages ship close to zero client JS."
+          },
+          "architecture": {
+            "summary": "Astro 5 hybrid output on Cloudflare — prerendered pages, Workers for the rest.",
+            "detail": "Pages prerender to the CDN at build time; the handful of routes that need a server (/api/contact, /api/chat) run as Workers functions. Cloudflare's free tier supplies Pages/Workers hosting, KV, Vectorize, and Workers AI as the primary LLM provider, all inside headroom a personal site won't bump into."
+          },
+          "results": {
+            "summary": "$0/month recurring, 3 equivalent content-editing paths, sub-50KB content-page JS.",
+            "detail": "Content is git-backed Astro content collections edited through three equivalent paths — direct file edit, Claude Code, or the Keystatic UI. A redaction gate enforces no employer-tied financial figures or headcounts anywhere on the public site, scanned in CI on every commit."
+          }
+        }
+      },
+      "body": "\n\nfelipetavares.dev is one of two proof points on this site, alongside Selfwright: the same\narchitectural discipline an enterprise system demands — ports & adapters, a hard cost constraint,\na content pipeline with an enforced redaction rule — applied at personal-brand scale. The cards\nabove give the shape; what follows is the full picture.\n\n## Architecture\n\nThe site runs on **Astro 5** in hybrid output on the **Cloudflare** adapter — pages prerender to\nthe CDN at build time; the handful of routes that need a server (`/api/contact`, `/api/chat`) run\nas Workers functions. React is used only for **islands** — components that genuinely need\nclient-side interactivity (theme toggle, mobile menu, contact form, chat widget, accessibility\npanel) — so content pages ship close to zero client JS.\n\nUnderneath, `src/core/` is pure TypeScript with zero framework or provider imports, organized as\n**hexagonal ports & adapters**: `ContentRepository`, `LlmProvider`, `EmbeddingIndex`,\n`EmailSender`, `RateLimiter`. Every page and API route imports through the port's single binding\npoint (`src/config/site.ts`, `src/config/llm.ts`) — never an adapter directly. Swapping git for\na hosted CMS, or Workers AI for a different model provider, is a new adapter file and a one-line\nconfig change, not a page-level rewrite.\n\n## The $0 stack\n\nThe one non-negotiable constraint was **$0/month recurring**, domain already owned. That ruled out\na seat-priced hosted CMS and a pay-per-request LLM API as the default path, and pointed at\nCloudflare's free tier: Pages/Workers hosting, KV for rate limiting, Vectorize for embeddings, and\n**Workers AI as the primary LLM provider** (with Anthropic's API as an optional, config-swappable\nfallback) — all inside free-tier headroom a personal site won't bump into. Contact form email delivery\nruns through **Resend** (REST API, key stored as a Worker env binding). Bot protection on `/api/contact`\nuses **Cloudflare Turnstile** — server-side verification, sitekey public, secret stays in the Worker.\n\n## Git-based CMS, three editing modes\n\nContent is git-backed Astro content collections (MDX for articles/projects, JSON for roles/talks/\nsite singletons) — one content model, edited through three equivalent paths: a direct file edit,\nClaude Code, or the **Keystatic** UI at `/keystatic` in dev (`storage.kind: 'local'` for now;\nGitHub-mode storage is a documented TODO pending a GitHub App). `astro.config.mjs` only registers\nthe Keystatic integration outside `astro build`, so no admin routes exist in the deployed site.\n\n## Design system\n\nThe site uses glass-card surfaces throughout (`backdrop-filter: blur() saturate()` with solid\nfallbacks), a token-first theming layer (one CSS file drives both dark and light themes through\ncustom properties), and a Deep Signal hero — a vendored WebGL brain canvas that carries the\nsite's own content (kinetic type, headline, CTAs) rather than placeholder copy. The galaxy\nbackdrop (site-wide WebGL layer) sits below all page content and adapts to light and dark themes,\nscaling down to fine ink-speck density in light mode so content stays dominant.\n\nOne design token source (`src/styles/tokens.css`) drives both themes through CSS custom\nproperties switched by a single class on `<html>`. Tailwind v4's `@theme` block maps those\ntokens into utility classes, so no component hardcodes a hex value.\n\n## Redaction-gated content pipeline\n\nA hard content rule — no employer-tied financial figures or headcounts anywhere on the public\nsite — is enforced editorially across role JSONs, the dossier, the home credibility strip,\nproject MDX, and the chatbot's index. Metrics either use relative multiples (\"cut integration\ncost by more than half\"), magnitude bands (\"8-figure portfolio\"), or public non-financial facts.\nThe chatbot's index is rebuilt after every redaction pass so it can't surface a pre-redaction\nfigure from a stale chunk.\n\n## RAG chatbot with a provider router\n\n`/api/chat` streams answers grounded in this site's own content via Server-Sent Events. The\nretrieval index is built by `pnpm build-chat-index` (`scripts/build-chat-index.ts`), chunking\narticles, projects, roles, and site copy. `LlmRouter` tries Workers AI first and falls back to\nAnthropic without any component-level change. The chat launcher is a 56px avatar circle (the\nowner's raster brand glyph) with a green presence dot — no persistent server state, no PII\nstorage.\n\n## The publish-kit\n\n`pnpm publish-kit <slug>` turns one canonical MDX article into four syndication artifacts —\nSubstack HTML, a LinkedIn post, a Reddit framing note, an X thread — so writing is authored once\nand syndicated outward rather than rewritten per platform. Dev.to and Hashnode pull the RSS feed\ndirectly.\n\n## The /reading section\n\n`/reading` is a public log of books, articles, and papers with the owner's verdict on each —\none way his judgment compounds in public rather than staying in private notes. Each entry carries\na type, domains, and a verdict; filter chips let readers narrow by either axis.\n\n## Decisions\n\n**Astro over Next.js.** The site is mostly static, SEO-critical content read on commutes. Astro's\nislands architecture ships near-zero client JS on content pages by default; a Next.js app would\nhave meant fighting its client-first defaults for a site that doesn't need app-router-grade\nclient state.\n\n**Git-based CMS over Sanity/Payload from day one.** A hosted CMS adds a seat-priced dependency\nand a second source of truth before there's any evidence the git + Keystatic workflow can't keep\nup with actual publishing cadence. The `ContentRepository` port keeps that door open without\npaying for it now.\n\n**Workers AI first, Anthropic as fallback — not the reverse.** Workers AI is free within\nCloudflare's tier and colocates with the rest of the stack; routing through it first keeps the\nchatbot inside the $0 budget for normal traffic, with a paid-API fallback available via config\nif quality or availability demands it.\n\n**Flip page-transition morphs skipped, in favor of stability.** The design spec included Astro\nView Transitions-driven Flip morphs between card and hero states. Landing the higher-value items\n— Lenis, section reveals, the accessibility control center, card magnetics — cleanly took\npriority; Flip remains a documented option.\n\n**The galaxy backdrop as a deliberate, logged budget exception.** The site-wide WebGL galaxy\nlayer (React Bits Galaxy.tsx, MIT) adds motion-conditional render overhead. It's gated behind\n`motionEnabled() && fx !== 'off'`, scales to low-density on mobile, and near-disappears in light\nmode. The trade-off is logged; a config flag drops it instantly if needed.\n\n<Callout title=\"More decisions, the full stack, a changelog\">\nThis page covers the shape of the build. `/engineering` goes further: six more decision records\nrewritten executive-readable, every piece of the stack with its one honest reason, and a dated\nchangelog distilled from this repo's real commit history — no marketing copy about engineering\ndiscipline, the discipline itself. [Read the engineering hub →](/engineering)\n</Callout>\n\n## What this demonstrates\n\nThe same discipline used on enterprise systems — ports before adapters, a $0-forced architecture\nrather than a padded one, redaction as a hard content gate, a design system with one signature\ndevice — holds up on a constrained, real, shipped system. The decisions, stack rationale, and a\ndated changelog are on [/engineering](/engineering).\n\nThe reasoning behind the architectural decisions is also written up as an article: [Why I Built\nThis Site the Way I Did](/writing/why-i-built-this-site-the-way-i-did).\n\n## Status\n\nActive — this is the live, deployed site you're reading. It ships in phases (documented in the\naddendum's delivery table), each gated on `pnpm check`, `pnpm test`, `pnpm build`, and a\nLighthouse/axe pass before merge.\n"
+    },
+    {
+      "slug": "selfwright",
+      "frontmatter": {
+        "title": "Selfwright",
+        "tagline": "An open-core, local-first career operating system: every output traces to a locked evidence registry.",
+        "northStar": "A career operating system built on one constraint: every output traces back to verified evidence.",
+        "problem": "Career tools optimize for keyword volume. Selfwright starts from a locked evidence registry and produces only what it can verify, then stores every decision made along the way.",
+        "outcomes": [
+          "Every artifact — cover letters, prep packs, drills — passes a truth validator before it can be used",
+          "Co-piloted generation with no API keys: the prompt runs in your existing Claude session; no per-call billing",
+          "Evidence compounds across applications, interviews, and debriefs; no application starts from scratch"
+        ],
+        "status": "active",
+        "roleLine": "Founder & architect",
+        "stack": [
+          "TypeScript",
+          "Hexagonal architecture (ports & adapters)",
+          "Domain-Driven Design",
+          "PostgreSQL + pgvector",
+          "Claude (Anthropic) via a co-piloted generation path"
+        ],
+        "featured": true,
+        "order": 1,
+        "metrics": [
+          {
+            "label": "Architecture",
+            "value": "Hexagonal, DDD, modular monolith"
+          },
+          {
+            "label": "Fitness checks",
+            "value": "33 total (28 in CI)"
+          },
+          {
+            "label": "Holistic fit (LLM-tier close-out roles)",
+            "value": "4.6-4.7 / 5.0"
+          }
+        ],
+        "deepDive": {
+          "problem": {
+            "summary": "Career tools optimize for volume and keyword-fit, not truth.",
+            "detail": "Most career and job-search tools optimize for volume and keyword-fit. Selfwright optimizes for truthful, defensible, top-tier output, then compounds everything learned — evidence, stories, decisions, contacts, lessons — into a personal knowledge system."
+          },
+          "approach": {
+            "summary": "A locked truth layer, honesty walls, and scored drifts as the moat.",
+            "detail": "Four compounding goals, in build order: a career engine (truthful, ATS-tuned, archetype-tailored CVs and covers, auto-discovered roles), a coach (interview and networking prep, deliberate skill-gap closing), content (thought-leadership writing support), and expertise (becoming a functional and technical expert across the spaces it touches)."
+          },
+          "architecture": {
+            "summary": "Hexagonal, DDD, modular monolith — TypeScript-first, zero framework imports in the domain core.",
+            "detail": "The domain core is pure TypeScript with zero framework, provider, or storage imports — everything external (LLM calls, storage, memory, rendering, notifications) is reached only through a port, implemented by a swappable adapter. The git-based truth layer is the state of record; a PostgreSQL projection (with pgvector) provides a rebuildable index — never the source of truth itself."
+          },
+          "results": {
+            "summary": "Truth validator passes on every generated artifact; evidence base compounds with each interview cycle.",
+            "detail": "Selfwright's fitness-function suite catches architectural drift and truth violations automatically. The truth-trace validator gates every generated document before use. After each interview, the coaching loop feeds debriefs, gap-scans, and drills back into the same evidence base."
+          }
+        }
+      },
+      "body": "\n\nSelfwright is an open-core career operating system built around one constraint: every output traces to a locked evidence registry. It is released at 0.6.0 and in active use for career development, built in public under Apache 2.0.\n\n[Read the full overview at /selfwright/](/selfwright/)\n"
+    }
+  ],
+  "roles": [
+    {
+      "slug": "btg-pactual-senior-product-manager",
+      "org": "BTG Pactual",
+      "title": "Senior Product Manager, ERP & Treasury",
+      "start": "2013-09",
+      "end": "2016-08",
+      "location": "Rio de Janeiro, BR",
+      "arc": "Designing a trading business from the middle office out",
+      "arcPt": "Desenhando um negócio de trading a partir do middle office",
+      "impact": [
+        {
+          "metric": "Back-office & ERP",
+          "narrative": "Led the team that maintained and improved the bank's SAP ERP, supporting back-office operations across trading and asset management.",
+          "narrativePt": "Liderou a equipe responsável pela manutenção e melhoria do SAP ERP do banco, apoiando as operações de back-office em trading e gestão de ativos."
+        },
+        {
+          "metric": "Process design",
+          "narrative": "Designed the middle- and back-office process and flows — risk, P&L, position, MTM through settlement — for a commodities trading business stand-up.",
+          "narrativePt": "Desenhou os processos e fluxos de middle e back office — risco, P&L, posição, MTM até liquidação — para a estruturação de um negócio de trading de commodities."
+        },
+        {
+          "metric": "Regulatory programs",
+          "narrative": "Led the implementation of major regulatory programs, coordinating cross-functional squads across the trading and asset-management back office.",
+          "narrativePt": "Liderou a implementação de grandes programas regulatórios, coordenando squads multifuncionais no back office de trading e gestão de ativos."
+        }
+      ],
+      "domains": [
+        "Enterprise & Business Architecture",
+        "Portfolio & Program Management"
+      ],
+      "order": 7
+    },
+    {
+      "slug": "cargill-global-product-data-leader",
+      "org": "Cargill",
+      "title": "Global Product Data Leader",
+      "start": "2021-10",
+      "end": "2023-05",
+      "location": "Amsterdam, NL",
+      "arc": "Commercializing data as a product and mapping the path to a modernized platform",
+      "arcPt": "Transformando dados em produto e traçando o caminho para uma plataforma modernizada",
+      "impact": [
+        {
+          "metric": "Revenue uplift",
+          "narrative": "Delivered data products for operational and analytical use cases, heavily increasing revenue across the trading business.",
+          "narrativePt": "Entregou produtos de dados para casos de uso operacionais e analíticos, aumentando significativamente a receita do negócio de trading."
+        },
+        {
+          "metric": "Future State Strategy",
+          "narrative": "Conceived and delivered the Future State Strategy for Data — the blueprint that led to an 8-figure program to modernize the data platform for Agriculture & Trading.",
+          "narrativePt": "Concebeu e entregou a Future State Strategy para Dados — o blueprint que resultou em um programa de oito dígitos para modernizar a plataforma de dados do Agriculture & Trading."
+        },
+        {
+          "metric": "Cost efficiency",
+          "narrative": "Reduced cost across the product-data estate while managing vendor contracts and initiatives to drive efficiency.",
+          "narrativePt": "Reduziu custos em todo o portfólio de dados de produto, gerenciando contratos e iniciativas com fornecedores para ganhar eficiência."
+        }
+      ],
+      "domains": [
+        "Data Management & Analytics",
+        "Digital Strategy & IT Strategy"
+      ],
+      "order": 2
+    },
+    {
+      "slug": "cargill-sr-principal-architect-leader",
+      "org": "Cargill",
+      "title": "Sr. Principal Architect Leader",
+      "start": "2023-06",
+      "location": "Amsterdam, NL",
+      "arc": "Setting the enterprise architecture direction for Agriculture & Trading — AI capabilities, Platform-as-a-Product, and global integration",
+      "arcPt": "Definindo a direção de arquitetura corporativa para Agriculture & Trading — capacidades de IA, Platform-as-a-Product e integração global",
+      "impact": [
+        {
+          "metric": "AI & GenAI",
+          "narrative": "Anchors the enterprise AI and GenAI capabilities for Agriculture & Trading — from agentic engineering patterns to a GenAI productivity capability for the front-office research workflow.",
+          "narrativePt": "Ancora as capacidades de IA e GenAI corporativa para Agriculture & Trading — de padrões de engenharia agêntica a uma capacidade de produtividade GenAI para o fluxo de pesquisa do front-office."
+        },
+        {
+          "metric": "Future State Strategy",
+          "narrative": "Delivered the Future State Strategy for Data and Integration, establishing the architecture direction for a Platform-as-a-Product data estate across a highly matrixed, federated organization.",
+          "narrativePt": "Entregou a Future State Strategy para Dados e Integração, estabelecendo a direção de arquitetura para um portfólio de dados Platform-as-a-Product em uma organização altamente matricial e federada."
+        },
+        {
+          "metric": "Functional direction",
+          "narrative": "Functional direction across a large, federated architecture and engineering organization spanning trading, integration, and data — Enterprise Architecture as the connective tissue for the Agriculture & Trading business.",
+          "narrativePt": "Direção funcional sobre uma grande organização federada de arquitetura e engenharia abrangendo trading, integração e dados — Arquitetura Corporativa como elo entre as áreas do negócio de Agriculture & Trading."
+        }
+      ],
+      "domains": [
+        "AI & Agentic Engineering",
+        "Enterprise & Business Architecture",
+        "Data Architecture & Engineering",
+        "Cloud & Platform Architecture",
+        "Integration Architecture"
+      ],
+      "order": 1,
+      "technologies": [],
+      "techCategories": [
+        {
+          "label": "AI & Agentic",
+          "items": [
+            "Claude",
+            "OpenAI",
+            "Pinecone",
+            "Abacus.AI",
+            "TrueFoundry",
+            "Agentic Engineering"
+          ]
+        },
+        {
+          "label": "Data Platform",
+          "items": [
+            "Snowflake",
+            "AWS Lakehouse",
+            "dbt",
+            "Spark",
+            "Atlan Catalog",
+            "Data Contracts",
+            "Aurora PostgreSQL",
+            "Neptune"
+          ]
+        },
+        {
+          "label": "Integration & Events",
+          "items": [
+            "Confluent Cloud",
+            "Apache Flink",
+            "AWS SQS",
+            "Solace",
+            "Boomi",
+            "API Management",
+            "Event-driven architecture"
+          ]
+        },
+        {
+          "label": "Enterprise Applications",
+          "items": [
+            "SAP S/4HANA",
+            "SAP BTP",
+            "ServiceNow"
+          ]
+        },
+        {
+          "label": "Cloud & Infrastructure",
+          "items": [
+            "AWS",
+            "Terraform",
+            "Kubernetes"
+          ]
+        },
+        {
+          "label": "Architecture Patterns",
+          "items": [
+            "Hexagonal Architecture",
+            "CQRS"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "evbox-head-of-data-analytics",
+      "org": "EVBOX",
+      "title": "Head of Data & Analytics",
+      "start": "2020-12",
+      "end": "2021-09",
+      "location": "Amsterdam, NL",
+      "arc": "Building the data and analytics function and delivering significant savings across the business",
+      "arcPt": "Criando a função de dados e analytics e entregando economias significativas para o negócio",
+      "impact": [
+        {
+          "metric": "Cost savings",
+          "narrative": "Significantly reduced SAP programme cost and BI run-cost, demonstrating the direct business value of the new data and analytics function.",
+          "narrativePt": "Reduziu significativamente os custos do programa SAP e de operação de BI, demonstrando o valor direto da nova função de dados e analytics para o negócio."
+        },
+        {
+          "metric": "Data function",
+          "narrative": "Built and led the data and analytics function from the ground up at a fast-scaling EV charging infrastructure company — team, tooling, and operating model designed to support rapid growth.",
+          "narrativePt": "Construiu e liderou a função de dados e analytics do zero em uma empresa de infraestrutura de carregamento de VE em rápido crescimento — equipe, ferramentas e modelo operacional pensados para apoiar o crescimento acelerado."
+        }
+      ],
+      "domains": [
+        "Data Management & Analytics",
+        "Portfolio & Program Management"
+      ],
+      "order": 3,
+      "technologies": [
+        "Snowflake",
+        "SAP",
+        "Salesforce"
+      ]
+    },
+    {
+      "slug": "pwc-senior-manager-data-sap",
+      "org": "PwC Netherlands",
+      "title": "Senior Manager, Data and SAP",
+      "start": "2019-07",
+      "end": "2020-11",
+      "location": "Amsterdam, NL",
+      "arc": "Taking PwC's SAP advisory from its first Netherlands program to established practice",
+      "arcPt": "Levando o SAP advisory da PwC do primeiro programa nos Países Baixos a uma prática estabelecida",
+      "impact": [
+        {
+          "metric": "First SAP program",
+          "narrative": "Responsible for the first SAP program ever sold by PwC in the Netherlands — a utilities company digital transformation that defined the ETRM/ERP capability boundary and asset-management split across both systems.",
+          "narrativePt": "Responsável pelo primeiro programa SAP vendido pela PwC nos Países Baixos — uma transformação digital de empresa de utilities que definiu a fronteira de capacidades entre ETRM e ERP, incluindo a separação de gestão de ativos entre os dois sistemas."
+        },
+        {
+          "metric": "Global brewer",
+          "narrative": "Led the Central Finance Data and R2R workstream at a major global brewer — the most complex financial data design challenge in the program.",
+          "narrativePt": "Liderou o workstream de Central Finance Data e R2R em uma grande cervejaria global — o desafio mais complexo de design de dados financeiros no programa."
+        },
+        {
+          "metric": "Practice inception",
+          "narrative": "Led the inception of PwC's SAP practice in the Netherlands, establishing the delivery model and team structure from the ground up.",
+          "narrativePt": "Liderou a criação da prática SAP da PwC nos Países Baixos, estabelecendo o modelo de entrega e a estrutura de equipe do zero."
+        }
+      ],
+      "domains": [
+        "SAP Delivery, Strategy & Architecture",
+        "Enterprise & Business Architecture"
+      ],
+      "order": 4,
+      "technologies": [
+        "SAP",
+        "Equias"
+      ]
+    },
+    {
+      "slug": "sap-business-architect",
+      "org": "SAP",
+      "title": "Finance Consultant/Business Architect",
+      "start": "2017-07",
+      "end": "2018-07",
+      "location": "Lisbon, PT",
+      "arc": "Delivering best-practice SAP S/4HANA builds that materially reduce client cost",
+      "arcPt": "Entregando builds SAP S/4HANA de melhores práticas que reduzem materialmente os custos do cliente",
+      "impact": [
+        {
+          "metric": "Client cost reduction",
+          "narrative": "Business architecture on an SAP S/4HANA order-to-cash rollout: standard, best-practice build design that materially reduced client implementation cost.",
+          "narrativePt": "Arquitetura de negócio em um rollout de order-to-cash em SAP S/4HANA: design de build padronizado e de melhores práticas que reduziu materialmente o custo de implementação para o cliente."
+        }
+      ],
+      "domains": [
+        "SAP Delivery, Strategy & Architecture"
+      ],
+      "order": 6,
+      "technologies": [
+        "SAP S/4HANA"
+      ]
+    },
+    {
+      "slug": "siemens-order-to-cash-lead",
+      "org": "Siemens",
+      "title": "Order-to-Cash Solution Lead",
+      "start": "2018-07",
+      "end": "2019-07",
+      "location": "Lisbon, PT",
+      "additionalLocation": "Munich, DE",
+      "arc": "Owning the order-to-cash solution on Siemens' Global SAP S/4HANA rollout",
+      "arcPt": "Liderando a solução order-to-cash no rollout global do SAP S/4HANA da Siemens",
+      "impact": [
+        {
+          "metric": "Global O2C ownership",
+          "narrative": "Led the order-to-cash solution on the Global SAP S/4HANA rollout — responsible for process design, system configuration, and delivery across multiple markets.",
+          "narrativePt": "Liderou a solução order-to-cash no rollout global do SAP S/4HANA — responsável por design de processos, configuração do sistema e entrega em múltiplos mercados."
+        },
+        {
+          "metric": "Run-cost reduction",
+          "narrative": "Delivered a standardized, best-practice order-to-cash build that significantly reduced run-cost for the programme.",
+          "narrativePt": "Entregou um build order-to-cash padronizado e de melhores práticas que reduziu significativamente o custo operacional do programa."
+        }
+      ],
+      "domains": [
+        "SAP Delivery, Strategy & Architecture",
+        "Portfolio & Program Management"
+      ],
+      "order": 5,
+      "technologies": [
+        "SAP S/4HANA"
+      ]
+    }
+  ],
+  "talks": [],
+  "site": {
+    "positioning": {
+      "statement": "Felipe Tavares is a senior enterprise and business architecture leader with 18 years across trading, banking, consulting and manufacturing industries. The consistent thread: translating complex trade and operational processes into defensible target architectures, and, increasingly, turning AI and data strategy into measurable business value. He leads in a global matrix and has moved architecture from gatekeeping to orchestrator and hands-on delivery."
+    },
+    "hero": {
+      "headline": "Enterprise architecture and AI strategy, built to survive contact with the real business.",
+      "slogan": "Architecting AI ambition into enterprise reality.",
+      "subhead": "18 years turning Architecture, AI, Data, Platform Engineering and Product Management strategies into shipped value.",
+      "primaryCtaLabel": "See the full story",
+      "primaryCtaHref": "/experience",
+      "secondaryCtaLabel": "Book a call",
+      "secondaryCtaHref": "/contact"
+    },
+    "skillDomains": [
+      {
+        "name": "AI & Agentic Engineering",
+        "shortLabel": "AI & Agentic",
+        "blurb": "Built the business case for 8-figure AI and data value in commodity trading, shipping AI-augmented architecture platforms hands-on.",
+        "weight": 13
+      },
+      {
+        "name": "Enterprise & Business Architecture",
+        "shortLabel": "Enterprise Arch",
+        "blurb": "Leads a central architecture function: authored the Architecture Guiding Principles and architect behaviour model across a federated global org.",
+        "weight": 12
+      },
+      {
+        "name": "Data Architecture & Engineering",
+        "shortLabel": "Data Arch & Eng",
+        "blurb": "Architected the future-state of an 8-figure enterprise data platform (lakehouse, streaming, API-first), now underpinning trading domains.",
+        "weight": 11
+      },
+      {
+        "name": "Cloud & Platform Architecture",
+        "shortLabel": "Cloud & Platform",
+        "blurb": "Drives a Platform-as-a-Product operating model on AWS: golden paths, IaC and Policy as Code, a Terraform pipeline catalogue.",
+        "weight": 10
+      },
+      {
+        "name": "Integration Architecture",
+        "shortLabel": "Integration",
+        "blurb": "Defined the enterprise future-state event-driven, API-led integration architecture and leads its adoption across global trading programs.",
+        "weight": 9
+      },
+      {
+        "name": "Digital Strategy & IT Strategy",
+        "shortLabel": "Digital Strategy",
+        "blurb": "Sets technology strategy for complex, regulated domains, including a multi-vendor buy-versus-build assessment for commodity trading systems.",
+        "weight": 8
+      },
+      {
+        "name": "Data Management & Analytics",
+        "shortLabel": "Data & Analytics",
+        "blurb": "Delivered data products credited with a double-digit-million revenue uplift, plus multi-million-dollar cost reductions across the product-data estate.",
+        "weight": 7
+      },
+      {
+        "name": "Software & Agentic Engineering",
+        "shortLabel": "Software Eng",
+        "blurb": "Builds hands-on: an in-house AI-augmented architecture platform that auto-assembles context for delivery teams and AI coding assistants.",
+        "weight": 6
+      },
+      {
+        "name": "SAP Delivery, Strategy & Architecture",
+        "shortLabel": "SAP Delivery",
+        "blurb": "Led SAP S/4HANA business architecture and order-to-cash transformations, cutting the cost of a heavily customized system by half.",
+        "weight": 5
+      },
+      {
+        "name": "Portfolio & Program Management",
+        "shortLabel": "Portfolio & Prog",
+        "blurb": "Management-team member on a 9-figure cloud migration program, with functional direction across a large architecture and engineering organization.",
+        "weight": 4
+      },
+      {
+        "name": "Product Management & Agile Delivery",
+        "shortLabel": "Product & Agile",
+        "blurb": "SCRUM and SAFe practitioner, CSPO and CSM certified. Brought agile delivery discipline to ERP/treasury and architecture operating models.",
+        "weight": 4
+      },
+      {
+        "name": "Technology Leadership & Org Design",
+        "shortLabel": "Tech Leadership",
+        "blurb": "Directly led multiple engineering, architecture and product teams, each with its own lead, and hundreds more through a federated, matrix operating model.",
+        "weight": 4
+      }
+    ],
+    "credibility": {
+      "statements": [
+        "Directly led multiple engineering, architecture and product teams, each with its own lead",
+        "Led hundreds of people across teams through a matrix operating model",
+        "18 years across trading, banking, consulting and manufacturing industries",
+        "Moved architecture from gatekeeping to orchestrator and hands-on delivery"
+      ]
+    },
+    "intentChips": [
+      {
+        "label": "Ways to work together",
+        "href": "/contact#ways-to-work-together"
+      },
+      {
+        "label": "Deep technical dives",
+        "href": "/projects"
+      },
+      {
+        "label": "Booking a speaker?",
+        "href": "/speaking"
+      }
+    ],
+    "waysToWorkTogether": {
+      "eyebrow": "Beyond the day job",
+      "heading": "Ways to work together",
+      "cards": [
+        {
+          "title": "Mentoring",
+          "body": "I mentor engineers and architects working through those exact questions: how to structure a system, how to grow into the next role.",
+          "topic": "Advisory"
+        },
+        {
+          "title": "Advisory conversations",
+          "body": "I sit on internal architecture and governance boards, and advise founders building in adjacent spaces. If you want a second opinion on a target architecture or an early AI bet, that's the conversation.",
+          "topic": "Advisory"
+        },
+        {
+          "title": "Speaking & panels",
+          "body": "I speak on architecture, AI strategy, and technology leadership at conferences, panels, and in education settings. Specifics, not slideware.",
+          "topic": "Speaking"
+        }
+      ]
+    },
+    "socialLinks": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/in/felipetavares/",
+        "icon": "linkedin"
+      },
+      {
+        "label": "GitHub",
+        "url": "https://github.com/fst-it",
+        "icon": "github"
+      },
+      {
+        "label": "Substack",
+        "url": "https://fstit.substack.com",
+        "icon": "rss"
+      }
+    ],
+    "dossier": {
+      "summary": "Sr. Principal Architect Leader with 18 years across trading, banking, consulting and manufacturing industries. Director-level enterprise-architecture leadership, leading a central architecture function with functional direction over a large architecture and engineering organization (typically ≈10 direct, 20+ dotted-line). Leads enterprise and business architecture, AI, and data strategy across a global Fortune 500 organization's Agriculture and Trading and Data and Integration portfolios, including enterprise CTRM strategy. Built the business case attributing 8-figure value to AI and data initiatives, and architected the future-state of an 8-figure enterprise data platform. Moves architecture from gatekeeping to orchestrator and hands-on delivery.",
+      "competencyMatrix": [
+        {
+          "domain": "Enterprise & Business Architecture",
+          "depth": 5,
+          "evidence": "Architecture Guiding Principles, architect behaviour model, and global architecture governance process across a federated organization."
+        },
+        {
+          "domain": "Integration Architecture",
+          "depth": 5,
+          "evidence": "Defined the enterprise future-state event-driven, API-led integration architecture and leads its adoption across global trading programs."
+        },
+        {
+          "domain": "AI & Agentic Engineering",
+          "depth": 4,
+          "evidence": "8-figure AI/data value business case; built an in-house AI-augmented architecture platform (event-driven, CQRS, hexagonal) hands-on."
+        },
+        {
+          "domain": "Data Architecture & Engineering",
+          "depth": 4,
+          "evidence": "Architected the future-state of an 8-figure enterprise data platform (lakehouse, streaming, API-first consumption), plus MDM/data governance architecture."
+        },
+        {
+          "domain": "Cloud & Platform Architecture",
+          "depth": 4,
+          "evidence": "Drives a Platform-as-a-Product operating model on AWS: golden paths, IaC and Policy as Code, a Terraform pipeline catalogue."
+        },
+        {
+          "domain": "Digital Strategy & IT Strategy",
+          "depth": 4,
+          "evidence": "Multi-vendor buy-versus-build assessment and hybrid target architecture for global commodity trading systems; commodities technology strategy and roadmap."
+        },
+        {
+          "domain": "Data Management & Analytics",
+          "depth": 4,
+          "evidence": "Delivered data products credited with a double-digit-million revenue uplift, plus multi-million-dollar cost reductions across the product-data estate."
+        },
+        {
+          "domain": "Software & Agentic Engineering",
+          "depth": 4,
+          "evidence": "Builds hands-on: an in-house AI-augmented architecture platform that auto-assembles a queryable context layer for delivery teams and AI coding assistants."
+        },
+        {
+          "domain": "SAP Delivery, Strategy & Architecture",
+          "depth": 4,
+          "evidence": "Led SAP S/4HANA business architecture and order-to-cash transformations, including a rollout that cut maintenance cost of a customized system by more than half."
+        },
+        {
+          "domain": "Portfolio & Program Management",
+          "depth": 4,
+          "evidence": "Management-team member on a 9-figure cloud migration program; functional direction across a large architecture and engineering organization spanning trading, integration, and data."
+        },
+        {
+          "domain": "Product Management & Agile Delivery",
+          "depth": 4,
+          "evidence": "CSPO & CSM certified; SCRUM/SAFe delivery leadership."
+        },
+        {
+          "domain": "Technology Leadership & Org Design",
+          "depth": 4,
+          "evidence": "Directly led multiple engineering, architecture and product teams, each with its own lead, and hundreds of people across teams through a matrix operating model."
+        }
+      ],
+      "education": [
+        {
+          "degree": "MSc Information Systems Management",
+          "school": "University of Lisbon"
+        },
+        {
+          "degree": "BSc Information Systems",
+          "school": "Universidade Federal do Estado do Rio de Janeiro (UNIRIO)"
+        }
+      ],
+      "certifications": [
+        "Certified Scrum Product Owner (CSPO)",
+        "Certified ScrumMaster (CSM)",
+        "SAP Application Professional",
+        "TOGAF, in progress (planned Dec 2026)"
+      ],
+      "languages": [
+        {
+          "name": "English",
+          "level": "Fluent"
+        },
+        {
+          "name": "Portuguese",
+          "level": "Native"
+        },
+        {
+          "name": "Spanish",
+          "level": "Intermediate"
+        },
+        {
+          "name": "French",
+          "level": "Beginner"
+        }
+      ]
+    }
+  },
+  "engineering": {
+    "decisions": [
+      {
+        "title": "Astro over Next.js",
+        "context": "The site is mostly static, SEO-critical content read by recruiters and peers on commutes, not an app that needs client-side routing state.",
+        "decision": "Astro 5 with React islands only where interactivity is real (chat, forms, theme toggle), instead of Next.js.",
+        "cost": "Gave up Next's larger ecosystem and app-router conveniences. Bought near-zero client JS on every content page by default — a budget Next would need deliberate work to hit, since its defaults ship a client-first runtime whether a page needs one or not."
+      },
+      {
+        "title": "Git-based CMS over a hosted one",
+        "context": "No evidence yet that a plain git-plus-editor workflow can't keep up with actual publishing cadence, before paying for a hosted CMS to solve a problem that might not exist.",
+        "decision": "Content lives as git-versioned MDX/JSON, read through one ContentRepository port, edited three equivalent ways — direct file, Claude Code, or a local Keystatic UI.",
+        "cost": "Gave up a hosted UI's polish and multi-editor collaboration. Bought a $0 CMS with the swap to Sanity or Payload staying a single new adapter file, not a page-level rewrite, if the workflow ever does hit a ceiling."
+      },
+      {
+        "title": "Workers AI first, Anthropic as fallback",
+        "context": "The chatbot needs a model provider, and a paid API as the default breaks the $0/month budget the moment the site gets any real traffic.",
+        "decision": "A provider router tries Cloudflare Workers AI first, free and colocated with the rest of the stack, and falls back to Anthropic only if that call errors — never the other way around.",
+        "cost": "Workers AI quality trails frontier models on nuanced questions. The tradeoff: a chatbot that costs nothing at normal traffic, with the upgrade to Claude Haiku sitting behind one config change in src/config/llm.ts, not a rewrite."
+      },
+      {
+        "title": "Cloudflare's free tier as the ceiling, not a starting point",
+        "context": "Domain already owned; every other cost (hosting, embeddings, rate-limit storage, email) had to fit inside a tier that won't get bumped by a personal site's real traffic, not just look cheap on a demo.",
+        "decision": "Pages/Workers for hosting, KV for rate limiting, Vectorize for embeddings, Workers AI for the chatbot — one provider, one free tier, for everything that isn't the domain itself.",
+        "cost": "Gave up a multi-vendor stack that might optimize any one piece slightly better. Bought a $0/month recurring bill regardless of how many features get added, because they all share the same headroom instead of each adding its own bill."
+      },
+      {
+        "title": "The hero moved from decorative to data-true",
+        "context": "An early hero concept was a generic animated gradient mesh with an optional pointer-parallax dot grid: motion for its own sake, no connection to what the site is actually about.",
+        "decision": "Replaced it with a living-blueprint diagram generated at build time from the real competency matrix — nodes are skill domains weighted by real depth, edges are roles that touched them. Not decorative randomness.",
+        "cost": "More build complexity than a static gradient. The hero now changes only when the underlying career data changes — the diagram is a claim about real experience, not a mood board."
+      },
+      {
+        "title": "A hand-written fetch transport over the MCP SDK's own",
+        "context": "The MCP server's Cloudflare Worker transport needed to implement the protocol's Transport interface, and the SDK ships one, StreamableHTTPServerTransport, for exactly this.",
+        "decision": "Traced that class into node_modules and found it's typed and implemented directly against Node's IncomingMessage/ServerResponse, which don't exist in the Workers runtime. Wrote FetchTransport instead: the same interface, implemented directly over the standard Fetch API.",
+        "cost": "Gave up the SDK's official, more-tested transport implementation. Bought a Worker that actually runs, verified with a real `wrangler dev` handshake, instead of one that fails at runtime reaching for a Node built-in that isn't there."
+      }
+    ],
+    "stack": [
+      {
+        "name": "Astro 5",
+        "reason": "Islands architecture ships near-zero client JS on static content by default."
+      },
+      {
+        "name": "React (islands only)",
+        "reason": "Used only where a component genuinely needs client-side state — chat, forms, toggles."
+      },
+      {
+        "name": "TypeScript, hexagonal ports & adapters",
+        "reason": "core stays framework-free; swapping an adapter never touches a page."
+      },
+      {
+        "name": "Tailwind CSS v4",
+        "reason": "Token-driven styling; every color and spacing value traces to one CSS custom-property file."
+      },
+      {
+        "name": "Cloudflare Pages + Workers",
+        "reason": "Hybrid output: pages prerender to the CDN, /api/* runs as Workers functions."
+      },
+      {
+        "name": "Cloudflare Workers AI + Vectorize",
+        "reason": "Free-tier chatbot provider and embedding index, with Anthropic as a config-swappable fallback."
+      },
+      {
+        "name": "Cloudflare KV",
+        "reason": "Rate-limit storage for /api/contact and /api/chat, free tier, no separate database."
+      },
+      {
+        "name": "Resend",
+        "reason": "Contact form email delivery via the REST API; the RESEND_API_KEY env binding keeps it out of the bundle."
+      },
+      {
+        "name": "Cloudflare Turnstile",
+        "reason": "Server-side bot verification on /api/contact; sitekey is public, secret stays in the Worker env binding."
+      },
+      {
+        "name": "Astro content collections (git-based CMS)",
+        "reason": "content/ is the CMS — MDX/JSON, versioned in git, edited three equivalent ways."
+      },
+      {
+        "name": "Keystatic",
+        "reason": "Local content-editing UI mirroring the same zod schemas Astro's collections already validate."
+      },
+      {
+        "name": "GSAP, Lenis, OGL (motion stack)",
+        "reason": "MIT-licensed; loaded lazily per page so content pages never pay for motion they don't use."
+      },
+      {
+        "name": "Model Context Protocol (packages/mcp)",
+        "reason": "Publishes the same content and chatbot to AI agents as typed tools, not scraped HTML."
+      },
+      {
+        "name": "Vitest + Playwright",
+        "reason": "Vitest for unit and architecture boundary tests; Playwright for cross-engine E2E across Chromium, WebKit, and mobile-WebKit."
+      }
+    ],
+    "changelog": [
+      {
+        "date": "2026-07-04",
+        "title": "Experience and career narrative published",
+        "detail": "Scroll-driven career timeline and printable executive dossier go live, covering seven roles.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-05",
+        "title": "Projects, writing engine, and chatbot launch",
+        "detail": "Project deep-dives, an RSS-backed writing engine with per-article publish kits, and a RAG chatbot built on Cloudflare Workers AI ship in one push.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-05",
+        "title": "Accessibility controls added",
+        "detail": "A floating panel ships with reduce-motion, high-contrast, and larger-text toggles, backed by a published accessibility statement.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-05",
+        "title": "AI-readable surfaces ship",
+        "detail": "Markdown twins for every page, an llms.txt file, and a JSON Resume endpoint go live. An AI agent can read this site cleanly without scraping HTML.",
+        "type": "content"
+      },
+      {
+        "date": "2026-07-06",
+        "title": "MCP server live at mcp.felipetavares.dev",
+        "detail": "Career data and the chatbot are exposed as typed Model Context Protocol tools. Any MCP-capable agent can query roles, search articles, or start a grounded chat.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-09",
+        "title": "Brand identity and galaxy backdrop ship",
+        "detail": "The owner's brand glyph replaces placeholder marks across favicon, OG image, and chat launcher. A WebGL galaxy layer sits behind all page content, tuned for light and dark themes.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-09",
+        "title": "/reading section opens",
+        "detail": "A public log of books, articles, and papers, each with a verdict and rationale. Filterable by type and domain, with four verdict levels.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-10",
+        "title": "Site deployed to Cloudflare Pages at $0/month",
+        "detail": "The full stack (Pages, Workers, KV, Vectorize, Workers AI) runs inside Cloudflare's free tier. Total recurring cost after the domain: $0/month.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-11",
+        "title": "Structured data and SEO pass",
+        "detail": "Person, WebSite, ProfilePage, and Article JSON-LD added across all main pages. Desktop Lighthouse scores after the pass: 100/100/100/100.",
+        "type": "content"
+      },
+      {
+        "date": "2026-07-11",
+        "title": "Agent-discovery endpoints added",
+        "detail": "A well-known API catalog, an MCP server card, and HTTP Link headers on the homepage let AI agents find the site's machine-readable surfaces without guessing paths.",
+        "type": "feature"
+      }
+    ]
+  },
+  "reading": []
+}

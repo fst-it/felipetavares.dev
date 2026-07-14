@@ -1,0 +1,24 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://felipetavares.dev/api/cv.json",
+      "describedby": [
+        {
+          "href": "https://felipetavares.dev/llms.txt",
+          "type": "text/plain",
+          "title": "Site and endpoint index for AI agents (llms.txt)"
+        }
+      ]
+    },
+    {
+      "anchor": "https://mcp.felipetavares.dev/mcp",
+      "service-desc": [
+        {
+          "href": "https://raw.githubusercontent.com/fst-it/felipetavares.dev/main/packages/mcp/README.md",
+          "type": "text/markdown",
+          "title": "felipetavares-mcp tool reference (streamable HTTP, stateless)"
+        }
+      ]
+    }
+  ]
+}

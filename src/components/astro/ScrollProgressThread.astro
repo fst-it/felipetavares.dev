@@ -1,0 +1,42 @@
+---
+/**
+ * Site-wide scroll-progress thread (addendum section 1.3): a thin accent line that fills as
+ * the user scrolls — left edge on desktop, top edge on mobile. Primary mechanism is a CSS
+ * scroll-driven animation (`animation-timeline: scroll()`); the inline script below is a
+ * fallback for browsers without that support (Safari < ~17.4, older Firefox), driven by a
+ * lightweight scroll listener that only ever writes one CSS variable. Reduced-motion hides
+ * the thread entirely (see effects.css).
+ */
+---
+
+<div class="scroll-thread scroll-thread-auto scroll-thread-responsive" aria-hidden="true"></div>
+
+<script>
+  // JS fallback only runs when the browser lacks `animation-timeline: scroll()` support —
+  // feature-detected via CSS.supports so browsers with native support pay zero JS cost here.
+  if (!CSS.supports('animation-timeline', 'scroll()')) {
+    const thread = document.querySelector<HTMLElement>('.scroll-thread');
+    if (thread) {
+      let ticking = false;
+      function updateProgress() {
+        const doc = document.documentElement;
+        const scrollable = doc.scrollHeight - doc.clientHeight;
+        const progress = scrollable > 0 ? Math.min(1, window.scrollY / scrollable) : 0;
+        thread!.style.setProperty('--scroll-progress', String(progress));
+        ticking = false;
+      }
+      updateProgress();
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (!ticking) {
+            requestAnimationFrame(updateProgress);
+            ticking = true;
+          }
+        },
+        { passive: true }
+      );
+      window.addEventListener('resize', updateProgress);
+    }
+  }
+</script>

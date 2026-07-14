@@ -1,0 +1,44 @@
+---
+title: "Selfwright"
+tagline: "An open-core, local-first career operating system: every output traces to a locked evidence registry."
+northStar: "A career operating system built on one constraint: every output traces back to verified evidence."
+problem: "Career tools optimize for keyword volume. Selfwright starts from a locked evidence registry and produces only what it can verify, then stores every decision made along the way."
+outcomes:
+  - "Every artifact — cover letters, prep packs, drills — passes a truth validator before it can be used"
+  - "Co-piloted generation with no API keys: the prompt runs in your existing Claude session; no per-call billing"
+  - "Evidence compounds across applications, interviews, and debriefs; no application starts from scratch"
+status: "active"
+roleLine: "Founder & architect"
+stack:
+  - "TypeScript"
+  - "Hexagonal architecture (ports & adapters)"
+  - "Domain-Driven Design"
+  - "PostgreSQL + pgvector"
+  - "Claude (Anthropic) via a co-piloted generation path"
+featured: true
+order: 1
+metrics:
+  - label: "Architecture"
+    value: "Hexagonal, DDD, modular monolith"
+  - label: "Fitness checks"
+    value: "33 total (28 in CI)"
+  - label: "Holistic fit (LLM-tier close-out roles)"
+    value: "4.6-4.7 / 5.0"
+deepDive:
+  problem:
+    summary: "Career tools optimize for volume and keyword-fit, not truth."
+    detail: "Most career and job-search tools optimize for volume and keyword-fit. Selfwright optimizes for truthful, defensible, top-tier output, then compounds everything learned — evidence, stories, decisions, contacts, lessons — into a personal knowledge system."
+  approach:
+    summary: "A locked truth layer, honesty walls, and scored drifts as the moat."
+    detail: "Four compounding goals, in build order: a career engine (truthful, ATS-tuned, archetype-tailored CVs and covers, auto-discovered roles), a coach (interview and networking prep, deliberate skill-gap closing), content (thought-leadership writing support), and expertise (becoming a functional and technical expert across the spaces it touches)."
+  architecture:
+    summary: "Hexagonal, DDD, modular monolith — TypeScript-first, zero framework imports in the domain core."
+    detail: "The domain core is pure TypeScript with zero framework, provider, or storage imports — everything external (LLM calls, storage, memory, rendering, notifications) is reached only through a port, implemented by a swappable adapter. The git-based truth layer is the state of record; a PostgreSQL projection (with pgvector) provides a rebuildable index — never the source of truth itself."
+  results:
+    summary: "Truth validator passes on every generated artifact; evidence base compounds with each interview cycle."
+    detail: "Selfwright's fitness-function suite catches architectural drift and truth violations automatically. The truth-trace validator gates every generated document before use. After each interview, the coaching loop feeds debriefs, gap-scans, and drills back into the same evidence base."
+---
+
+Selfwright is an open-core career operating system built around one constraint: every output traces to a locked evidence registry. It is released at 0.6.0 and in active use for career development, built in public under Apache 2.0.
+
+[Read the full overview at /selfwright/](/selfwright/)

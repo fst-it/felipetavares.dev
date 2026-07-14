@@ -1,0 +1,188 @@
+---
+import { contentRepository } from '../../config/site';
+import { resolveLocale, getStrings, localeToPathPrefix } from '../../i18n';
+import SectionHeading from './SectionHeading.astro';
+
+const locale = resolveLocale(Astro.currentLocale);
+const strings = getStrings(locale);
+const prefix = localeToPathPrefix(locale);
+const testimonials = await contentRepository.getTestimonials();
+const credibility = await contentRepository.getCredibility(locale);
+
+function toOrdinalTag(i: number): string {
+  return String(i + 1).padStart(2, '0');
+}
+---
+
+<section class="px-4 py-11 sm:py-16">
+  <div class="mx-auto max-w-6xl">
+    <SectionHeading
+      eyebrow={strings.home.credibilityEyebrow}
+      title={strings.home.credibilityHeading}
+      subtitle={strings.home.credibilitySubtitle}
+    />
+
+    <!--
+      Branded stat-tiles (V3-polish commit 4) — upgraded from plain centered-text boxes to a
+      designed tile: uppercase mono eyebrow (numbered, "01"-"04"), a thread underline accent
+      (same visual language as `.reveal-underline` used on section headings), the statement in
+      display type, uniform heights (h-full + auto-rows-fr, unchanged), a staggered reveal-on-
+      scroll (same `animation-timeline: view()` + IntersectionObserver-fallback pattern as
+      RoleChapter.astro's journey-chapter reveal), and a non-interactive `tile-glow` hover (the
+      glow half of `.btn-interactive`'s treatment, without the button semantics/transform/press
+      states — these are static credibility statements, not actionable buttons).
+    -->
+    <div class="mt-10 grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        credibility.statements.map((statement, i) => (
+          <div
+            data-card-motion
+            class="credibility-tile tile-glow glass flex h-full flex-col rounded-[var(--radius-md)] p-6"
+            style={`--tile-index: ${i}`}
+          >
+            <p class="font-mono text-xs uppercase tracking-wider text-[var(--accent)]">{toOrdinalTag(i)}</p>
+            <span class="credibility-tile-underline mt-2" aria-hidden="true" />
+            <p class="mt-4 font-display text-base font-semibold text-[var(--text)] sm:text-lg">{statement}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    {
+      testimonials.length > 0 && (
+        <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {testimonials.map((t) => (
+            <blockquote class="glass rounded-[var(--radius-md)] p-6">
+              <p class="text-sm italic text-[var(--text)]">&ldquo;{t.quote}&rdquo;</p>
+              <footer class="mt-4 text-xs text-muted">
+                {t.author} — {t.authorTitle}
+              </footer>
+            </blockquote>
+          ))}
+        </div>
+      )
+    }
+
+    <div class="border-beam glass mt-16 flex flex-col items-center gap-6 rounded-[var(--radius-lg)] p-10 text-center sm:p-16">
+      <h2>{strings.home.ctaHeading}</h2>
+      <p class="max-w-xl text-muted">
+        {strings.home.ctaSubtitle}
+      </p>
+      <a
+        href={`${prefix}/contact`}
+        class="relative rounded-[var(--radius-sm)] bg-[var(--accent)] accent-bg-image px-6 py-3 font-semibold text-[var(--accent-contrast)] btn-interactive"
+      >
+        {strings.nav.bookACall}
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .credibility-tile-underline {
+    display: block;
+    width: 2rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 6px 0 var(--accent-glow);
+  }
+
+  /*
+   * Non-interactive glow-on-hover (V3-polish commit 4) — the glow half of `.btn-interactive`'s
+   * treatment (box-shadow bloom only), reused here for static credibility tiles that aren't
+   * buttons: no transform/press states, no focus-visible ring implications, just a quiet "this
+   * tile is alive" hover cue matching the same glass/glow visual language site-wide.
+   */
+  .tile-glow {
+    transition: box-shadow var(--duration-micro, 200ms) var(--ease-out, ease-out);
+  }
+
+  @media (hover: hover) {
+    .tile-glow:hover {
+      box-shadow: 0 4px 20px -6px var(--accent-glow);
+    }
+  }
+
+  /*
+   * Staggered reveal-on-scroll — same pattern as RoleChapter.astro's `.journey-chapter`:
+   * `animation-timeline: view()` where supported, IntersectionObserver `.is-visible` fallback
+   * otherwise, both honoring prefers-reduced-motion/motion-off by staying fully visible with no
+   * animation. `--tile-index` (set inline per tile) drives the stagger via `animation-delay`.
+   */
+  .credibility-tile {
+    opacity: 1;
+  }
+
+  @supports (animation-timeline: view()) {
+    .credibility-tile {
+      animation: tile-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+      animation-delay: calc(var(--tile-index, 0) * 80ms);
+    }
+  }
+
+  @supports not (animation-timeline: view()) {
+    .credibility-tile {
+      opacity: 0;
+      transform: translateY(16px);
+      transition:
+        opacity var(--duration-reveal) var(--ease-out),
+        transform var(--duration-reveal) var(--ease-out);
+      transition-delay: calc(var(--tile-index, 0) * 80ms);
+    }
+
+    .credibility-tile.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes tile-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .credibility-tile {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  html[data-motion='off'] .credibility-tile {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+</style>
+
+<script>
+  // IntersectionObserver fallback for browsers without `animation-timeline: view()` support
+  // (same pattern as JourneyProgressRail.astro) — toggles `.is-visible` so the CSS
+  // transition-based reveal in CredibilityCta.astro's <style> block can fire.
+  const tiles = Array.from(document.querySelectorAll<HTMLElement>('.credibility-tile'));
+  if ('IntersectionObserver' in window && tiles.length > 0) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add('is-visible');
+        });
+      },
+      { threshold: 0.2 }
+    );
+    tiles.forEach((tile) => observer.observe(tile));
+  } else {
+    tiles.forEach((tile) => tile.classList.add('is-visible'));
+  }
+</script>

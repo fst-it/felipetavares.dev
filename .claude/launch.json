@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "astro-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev", "--host"],
+      "port": 4321
+    },
+    {
+      "name": "astro-dev-diag",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev", "--port", "4398"],
+      "port": 4398
+    },
+    {
+      "name": "astro-dev-4397",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev", "--port", "4397"],
+      "port": 4397
+    }
+  ]
+}

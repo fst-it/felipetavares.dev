@@ -1,0 +1,102 @@
+---
+import { localizedNav, bookACallHref } from '../../config/nav';
+import { siteConfig } from '../../config/site';
+import { resolveLocale, getStrings, localeToPathPrefix } from '../../i18n';
+import BrandMark from './BrandMark.astro';
+import ThemeToggle from '../islands/ThemeToggle';
+import MobileMenu from '../islands/MobileMenu';
+
+// LanguageSwitcher import removed — PT-BR archived for v1 launch (ledger row 65).
+// Keep the component file itself; re-enable this import when _pt is restored.
+
+const locale = resolveLocale(Astro.currentLocale);
+const strings = getStrings(locale);
+const prefix = localeToPathPrefix(locale);
+const nav = localizedNav(strings);
+---
+
+<header class="sticky top-0 z-40 px-4 pt-4">
+  <div class="glass mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+    <a href={prefix ? `${prefix}/` : '/'} class="inline-flex min-h-11 items-center gap-2 font-display text-lg font-bold tracking-tight text-[var(--text)]">
+      <BrandMark size={28} animated class="text-[var(--accent)]" />
+      {siteConfig.name}
+    </a>
+
+    <nav aria-label="Primary" class="hidden items-center gap-6 lg:flex">
+      {
+        nav.map((link) => (
+          <a
+            href={`${prefix}${link.href}`}
+            class="inline-flex min-h-11 items-center text-sm font-medium text-[var(--text-muted)] transition-colors duration-200 hover:text-[var(--text)]"
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <!--
+        Command-palette trigger button (V3c commit 1). Server-rendered so it's visually present
+        with no pop-in; dispatches the same custom event the lazy `client:idle` island listens for
+        (mirrors the chat-launcher/a11y-badge static-shell pattern in BaseLayout.astro), so clicking
+        before hydration still queues the open intent rather than doing nothing.
+      -->
+      <button
+        id="command-palette-trigger-static"
+        type="button"
+        aria-label={strings.commandPalette.triggerLabel}
+        class="glass btn-interactive hidden min-h-11 items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors duration-200 hover:text-[var(--text)] sm:inline-flex"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+          <path d="M20 20 L16.5 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <span class="hidden lg:inline">{strings.commandPalette.searchLabel}</span>
+        <kbd class="hidden rounded border border-[var(--border-glass)] px-1.5 py-0.5 font-mono text-xs lg:inline" id="command-palette-kbd-hint">Ctrl K</kbd>
+      </button>
+      <script is:inline>
+        (function () {
+          var btn = document.getElementById('command-palette-trigger-static');
+          if (!btn) return;
+          var hint = document.getElementById('command-palette-kbd-hint');
+          if (hint && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+            hint.textContent = '⌘K';
+          }
+          btn.addEventListener('click', function () {
+            window.dispatchEvent(new CustomEvent('fst:open-palette'));
+          });
+        })();
+      </script>
+      <ThemeToggle client:load />
+      <a
+        href={`${prefix}${bookACallHref}`}
+        class="border-beam hidden min-h-11 items-center rounded-[var(--radius-sm)] bg-[var(--accent)] accent-bg-image px-4 py-2 text-sm font-semibold text-[var(--accent-contrast)] btn-interactive lg:inline-flex"
+      >
+        {strings.nav.bookACall}
+      </a>
+      <MobileMenu
+        client:load
+        links={nav.map((l) => ({ ...l, href: `${prefix}${l.href}` }))}
+        bookACallHref={`${prefix}${bookACallHref}`}
+        bookACallLabel={strings.nav.bookACall}
+      />
+    </div>
+  </div>
+</header>
+<script is:inline>
+  (function () {
+    var header = document.querySelector('header');
+    if (!header) return;
+    var THRESHOLD = 16;
+    function update() {
+      if (window.scrollY > THRESHOLD) {
+        header.setAttribute('data-scrolled', '');
+      } else {
+        header.removeAttribute('data-scrolled');
+      }
+    }
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+  })();
+</script>

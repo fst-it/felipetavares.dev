@@ -1,0 +1,28 @@
+{
+  "org": "Cargill",
+  "title": "Global Product Data Leader",
+  "start": "2021-10",
+  "end": "2023-05",
+  "location": "Amsterdam, NL",
+  "arc": "Commercializing data as a product and mapping the path to a modernized platform",
+  "arcPt": "Transformando dados em produto e traçando o caminho para uma plataforma modernizada",
+  "impact": [
+    {
+      "metric": "Revenue uplift",
+      "narrative": "Delivered data products for operational and analytical use cases, heavily increasing revenue across the trading business.",
+      "narrativePt": "Entregou produtos de dados para casos de uso operacionais e analíticos, aumentando significativamente a receita do negócio de trading."
+    },
+    {
+      "metric": "Future State Strategy",
+      "narrative": "Conceived and delivered the Future State Strategy for Data — the blueprint that led to an 8-figure program to modernize the data platform for Agriculture & Trading.",
+      "narrativePt": "Concebeu e entregou a Future State Strategy para Dados — o blueprint que resultou em um programa de oito dígitos para modernizar a plataforma de dados do Agriculture & Trading."
+    },
+    {
+      "metric": "Cost efficiency",
+      "narrative": "Reduced cost across the product-data estate while managing vendor contracts and initiatives to drive efficiency.",
+      "narrativePt": "Reduziu custos em todo o portfólio de dados de produto, gerenciando contratos e iniciativas com fornecedores para ganhar eficiência."
+    }
+  ],
+  "domains": ["Data Management & Analytics", "Digital Strategy & IT Strategy"],
+  "order": 2
+}

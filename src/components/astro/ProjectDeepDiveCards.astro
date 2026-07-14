@@ -1,0 +1,41 @@
+---
+/**
+ * Problem -> Approach -> Architecture -> Results card row (V3b addendum commit 1). Four
+ * uniform-height cards, each showing a short punchy summary with a "More ->" DetailSheet for the
+ * longer explanation — sits between the project hero and the long-form MDX body so a scanning
+ * reader gets the shape of the project before committing to the full deep-dive.
+ */
+import DetailSheet from '../islands/DetailSheet';
+import type { ProjectDeepDive } from '../../core/entities/project';
+
+export interface Props {
+  deepDive: ProjectDeepDive;
+}
+
+const { deepDive } = Astro.props;
+
+const cards = [
+  { key: 'problem', label: 'Problem', ...deepDive.problem },
+  { key: 'approach', label: 'Approach', ...deepDive.approach },
+  { key: 'architecture', label: 'Architecture', ...deepDive.architecture },
+  { key: 'results', label: 'Results', ...deepDive.results },
+] as const;
+---
+
+<ul class="mt-10 grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  {
+    cards.map((card) => (
+      <li class="glass flex h-full flex-col justify-between rounded-[var(--radius-md)] p-5">
+        <div>
+          <p class="font-mono text-xs uppercase tracking-wider text-[var(--accent)]">{card.label}</p>
+          <p class="mt-2 text-sm text-[var(--text)]">{card.summary}</p>
+        </div>
+        <div class="mt-4">
+          <DetailSheet client:visible triggerLabel="More →" title={`${card.label} — ${card.summary}`}>
+            <p>{card.detail}</p>
+          </DetailSheet>
+        </div>
+      </li>
+    ))
+  }
+</ul>

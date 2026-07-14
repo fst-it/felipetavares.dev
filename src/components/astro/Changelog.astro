@@ -1,0 +1,189 @@
+---
+/**
+ * Changelog — vertical timeline with glass cards for /engineering.
+ *
+ * Design: a narrow left rail connects dot markers; each entry sits in a glass
+ * card to the right. Optional `type` field drives a colour accent on the dot
+ * and a labelled badge using existing token colours (--accent / --success /
+ * --warn / --accent-cyan). Entries display newest-first (the component reverses
+ * the array; the JSON source stays chronological).
+ *
+ * Older entries collapse behind InlineExpander (native details/summary — no JS
+ * required for the open/close behaviour). Smooth height animation is CSS-only
+ * and static-open under prefers-reduced-motion / motion-off.
+ *
+ * Both themes, 375 / 768 / 1280 viewports.
+ */
+import InlineExpander from './InlineExpander.astro';
+
+export interface ChangelogEntry {
+  date: string;
+  title: string;
+  detail: string;
+  type?: string;
+}
+
+export interface Props {
+  entries: ChangelogEntry[];
+  /**
+   * How many most-recent entries to show before collapsing the rest.
+   * @default 5
+   */
+  collapseAfter?: number;
+}
+
+const { entries, collapseAfter = 5 } = Astro.props;
+
+// Display newest-first; source JSON stays chronological.
+const sorted = [...entries].reverse();
+const recent = sorted.slice(0, collapseAfter);
+const older = sorted.slice(collapseAfter);
+const newestDate = sorted[0]?.date ?? '';
+
+/** Maps a type slug to a CSS custom-property colour token string. */
+function dotColor(type?: string): string {
+  switch (type) {
+    case 'feature': return 'var(--accent)';
+    case 'fix':     return 'var(--success)';
+    case 'content': return 'var(--warn)';
+    case 'infra':   return 'var(--accent-cyan)';
+    default:        return 'var(--accent)';
+  }
+}
+---
+
+<div class="changelog">
+  <p class="mb-8 font-mono text-xs text-[var(--text-muted)]">
+    Last updated <span class="text-[var(--accent)]">{newestDate}</span>
+  </p>
+
+  <ol class="changelog-timeline">
+    {recent.map((entry) => (
+      <li class="changelog-entry">
+        <span
+          class="changelog-dot"
+          aria-hidden="true"
+          style={`background: ${dotColor(entry.type)};`}
+        ></span>
+        <div class="glass changelog-card rounded-[var(--radius-md)] p-5">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="font-mono text-xs uppercase tracking-wide text-[var(--accent)]">
+              {entry.date}
+            </span>
+            {entry.type && (
+              <span
+                class="changelog-badge font-mono text-[10px] uppercase tracking-widest rounded-full border px-2.5 py-0.5"
+                style={`color: ${dotColor(entry.type)}; border-color: ${dotColor(entry.type)};`}
+              >
+                {entry.type}
+              </span>
+            )}
+          </div>
+          <h3 class="mt-2 font-display text-base font-semibold text-[var(--text)]">
+            {entry.title}
+          </h3>
+          <p class="mt-1.5 text-sm text-muted">{entry.detail}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+  {older.length > 0 && (
+    <div class="mt-4">
+      <InlineExpander summaryLabel={`Earlier milestones (${older.length})`}>
+        <ol class="changelog-timeline mt-4">
+          {older.map((entry) => (
+            <li class="changelog-entry">
+              <span
+                class="changelog-dot changelog-dot--older"
+                aria-hidden="true"
+              ></span>
+              <div class="glass changelog-card rounded-[var(--radius-md)] p-5">
+                <div class="flex flex-wrap items-center gap-3">
+                  <span class="font-mono text-xs uppercase tracking-wide text-[var(--accent)]">
+                    {entry.date}
+                  </span>
+                  {entry.type && (
+                    <span
+                      class="changelog-badge font-mono text-[10px] uppercase tracking-widest rounded-full border px-2.5 py-0.5"
+                      style={`color: ${dotColor(entry.type)}; border-color: ${dotColor(entry.type)};`}
+                    >
+                      {entry.type}
+                    </span>
+                  )}
+                </div>
+                <h3 class="mt-2 font-display text-base font-semibold text-[var(--text)]">
+                  {entry.title}
+                </h3>
+                <p class="mt-1.5 text-sm text-muted">{entry.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </InlineExpander>
+    </div>
+  )}
+</div>
+
+<style>
+  /*
+   * Vertical timeline layout:
+   *   ol padding-left: 1.5rem (24px) creates the column for the rail and dots.
+   *   ol::before: the 1px rail, centred in the 24px column at left: 4px.
+   *   Each li is position: relative; the dot (8px) is absolute at
+   *   left: -20px = 24px − 20px = 4px from ol left → dot centre at 8px.
+   *   Rail at left: 7.5px ≈ dot centre — close enough with integer pixel rail.
+   *   We use left: 0.5rem (8px) on the rail and left: -20px (-1.25rem) on the dot
+   *   so the dot centre sits on the rail at ≈8px from the ol's left edge.
+   */
+  .changelog-timeline {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-left: 1.5rem; /* 24px column for rail + dot */
+  }
+
+  /* Vertical rail */
+  .changelog-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.4375rem; /* 7px — centre of the dot at 8px width / 2 = 4px offset from 3px start */
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 1px;
+    background: var(--surface-glass-strong);
+  }
+
+  .changelog-entry {
+    position: relative;
+  }
+
+  /* Dot: 8px circle, positioned so its centre aligns with the rail */
+  .changelog-dot {
+    position: absolute;
+    left: -1.125rem; /* -18px: li left is at 24px; 24 − 18 = 6px from ol left; dot 8px → centre at 10px */
+    top: 1.125rem;   /* 18px: aligns with the date/badge row inside the card */
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--accent-glow);
+    /* background set inline via style prop */
+  }
+
+  /* Older-entry dots are muted (inside the collapsed section) */
+  .changelog-dot--older {
+    background: var(--surface-glass-strong) !important;
+    box-shadow: none;
+  }
+
+  .changelog-card {
+    /* flex-1 equivalent: stretches to fill remaining width after the dot column */
+    display: block;
+    width: 100%;
+  }
+
+  .changelog-badge {
+    opacity: 0.9;
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+import { siteConfig } from '../../config/site';
+import { resolveLocale } from '../../i18n';
+
+export interface Props {
+  /** Compact variant for the footer; full panel for the end of an article. */
+  variant?: 'compact' | 'panel';
+}
+
+const { variant = 'panel' } = Astro.props;
+
+// Placeholder handles ("TODO-...") mean Felipe hasn't wired up Substack yet — render a tasteful
+// fallback instead of an iframe pointed at a domain that doesn't resolve.
+const isConfigured = !siteConfig.substackUrl.includes('TODO');
+
+// The compact footer variant is pure chrome, so its link text is localized (V3d addendum); the
+// full panel variant only ever appears at the end of an article, which stays EN-only in v1 (see
+// the addendum's deliberate writing/projects translation-scope decision), so its copy stays EN.
+const locale = resolveLocale(Astro.currentLocale);
+const compactSubscribeLabel = locale === 'pt-br' ? 'Assine no Substack' : 'Subscribe on Substack';
+const compactComingSoonLabel = locale === 'pt-br' ? 'Newsletter em breve' : 'Newsletter signup coming soon';
+---
+
+{
+  variant === 'compact' ? (
+    isConfigured ? (
+      <a
+        href={siteConfig.substackUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="glass btn-interactive flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm text-muted transition-colors duration-200 hover:text-[var(--accent)]"
+      >
+        {compactSubscribeLabel}
+      </a>
+    ) : (
+      <div class="glass flex items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm text-muted">
+        {compactComingSoonLabel}
+      </div>
+    )
+  ) : isConfigured ? (
+    <div class="border-beam glass mx-auto max-w-2xl rounded-[var(--radius-lg)] p-6 text-center sm:p-8">
+      <p class="font-mono text-xs uppercase tracking-wider text-[var(--accent)]">Newsletter</p>
+      <h2 class="mt-2 font-display text-xl font-semibold text-[var(--text)]">
+        Get new articles by email
+      </h2>
+      <p class="mx-auto mt-2 max-w-md text-sm text-muted">
+        Enterprise architecture, AI strategy, and data platforms — straight to your inbox, no spam.
+      </p>
+      <iframe
+        src={siteConfig.substackEmbedUrl}
+        width="100%"
+        height="150"
+        style="border:1px solid var(--border-glass); background:var(--surface); border-radius: var(--radius-sm);"
+        class="mt-6"
+        title="Subscribe via Substack"
+        loading="lazy"
+      />
+    </div>
+  ) : (
+    <div class="glass mx-auto max-w-2xl rounded-[var(--radius-lg)] p-8 text-center">
+      <p class="font-mono text-xs uppercase tracking-wider text-[var(--accent)]">Newsletter</p>
+      <h2 class="mt-2 font-display text-xl font-semibold text-[var(--text)]">
+        Subscribe — coming soon
+      </h2>
+      <p class="mx-auto mt-2 max-w-md text-sm text-muted">
+        The Substack newsletter isn't live yet. Follow on{' '}
+        <a href="https://www.linkedin.com/in/felipetavares/" class="text-[var(--accent)] underline underline-offset-2">
+          LinkedIn
+        </a>{' '}
+        in the meantime.
+      </p>
+    </div>
+  )
+}

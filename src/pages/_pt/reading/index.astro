@@ -1,0 +1,191 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import BreadcrumbList from '../../../components/astro/BreadcrumbList.astro';
+import { contentRepository, siteConfig } from '../../../config/site';
+import { getStrings } from '../../../i18n';
+import { VERDICT_LABELS } from '../../../core/entities/reading';
+import { formatCardDate } from '../../../lib/format-date';
+
+const strings = getStrings('pt-br');
+const s = strings.readingPage;
+const readings = await contentRepository.getReadings();
+
+const allTypes = [...new Set(readings.map((r) => r.type))].sort();
+const allDomains = [...new Set(readings.flatMap((r) => r.domains))].sort();
+
+const typeLabel: Record<string, string> = {
+  book: s.typeBook,
+  article: s.typeArticle,
+  paper: s.typePaper,
+};
+
+const pageTitle = s.eyebrow;
+const pageDescription =
+  'Lista de leituras de Felipe Tavares: livros, artigos e papers com veredictos honestos, as ideias que ficaram e os pontos de atenção.';
+---
+
+<!--
+  Reviews stay EN-only in v1 (content is in English; PT chrome, EN card content) — consistent with
+  the /pt/writing and /pt/projects pattern. Cards carry no "em inglês" badge here because the
+  collection header already explains the scope.
+-->
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={`${siteConfig.url}/pt/reading`}
+  markdownTwin="/pt/reading/index.md"
+  alternatePath="/reading"
+>
+  <BreadcrumbList crumbs={[
+    { name: 'Home', url: siteConfig.url },
+    { name: s.eyebrow, url: `${siteConfig.url}/pt/reading` },
+  ]} />
+
+  <section class="relative overflow-hidden px-4 pb-11 pt-11 sm:pt-16" aria-labelledby="reading-heading">
+    <div class="gradient-mesh" aria-hidden="true">
+      <div class="mesh-blob"></div>
+    </div>
+
+    <div class="relative z-10 mx-auto max-w-3xl text-center">
+      <p class="mb-2 font-mono text-sm uppercase tracking-wider text-[var(--accent)]">{s.eyebrow}</p>
+      <h1 id="reading-heading" class="text-balance" data-reveal>{s.heading}</h1>
+      <p class="mx-auto mt-6 max-w-2xl text-lg text-muted">
+        {s.subtitle}
+      </p>
+    </div>
+  </section>
+
+  <section class="px-4 pb-11 sm:pb-16">
+    <div class="mx-auto max-w-6xl">
+      {
+        readings.length === 0 ? (
+          <div class="glass rounded-[var(--radius-md)] p-10 text-center">
+            <p class="text-base text-muted">{s.empty}</p>
+          </div>
+        ) : (
+          <>
+            {allTypes.length > 0 && (
+              <div class="mb-6 flex flex-wrap gap-2" aria-label="Filtrar por tipo">
+                {allTypes.map((type) => (
+                  <a
+                    href={`/pt/reading/type/${type}`}
+                    class="inline-flex min-h-11 items-center rounded-full bg-[var(--surface-glass-strong)] px-4 py-2 text-xs font-medium text-muted transition-colors duration-200 hover:text-[var(--accent)]"
+                  >
+                    {typeLabel[type] ?? type}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {allDomains.length > 0 && (
+              <div class="mb-8 flex flex-wrap gap-2" aria-label="Filtrar por domínio">
+                {allDomains.map((domain) => (
+                  <a
+                    href={`/pt/reading/domain/${domain}`}
+                    class="inline-flex min-h-11 items-center rounded-full bg-[var(--surface-glass-strong)] px-4 py-2 text-xs font-medium text-muted transition-colors duration-200 hover:text-[var(--accent)]"
+                  >
+                    {domain}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {readings.map((reading) => (
+                <div
+                  data-card-motion
+                  class="glass flex flex-col gap-4 rounded-[var(--radius-md)] p-5"
+                >
+                  <div>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <span class="shrink-0 rounded-full bg-[var(--surface-glass-strong)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-muted">
+                        {typeLabel[reading.type] ?? reading.type}
+                      </span>
+                      <span class="font-mono text-xs text-muted">{formatCardDate(reading.dateRead, 'pt-br')}</span>
+                    </div>
+                    <h2 class="mt-2 font-display text-lg font-semibold text-[var(--text)]">{reading.title}</h2>
+                    <p class="text-sm text-muted">{reading.author}</p>
+                  </div>
+
+                  <div>
+                    <span class="verdict-badge" data-verdict={reading.verdict}>
+                      {VERDICT_LABELS[reading.verdict].pt}
+                    </span>
+                    <p class="mt-2 text-base text-[var(--text)]">{reading.verdictLine}</p>
+                  </div>
+
+                  <div>
+                    <p class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">{s.ideasWorthStealing}</p>
+                    <ul class="space-y-1">
+                      {reading.ideasWorthStealing.map((idea) => (
+                        <li class="flex items-start gap-2 text-base text-[var(--text)]">
+                          <span class="mt-1 shrink-0 text-[var(--accent)]" aria-hidden="true">→</span>
+                          <span>{idea}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">{s.watchOuts}</p>
+                    <ul class="space-y-1">
+                      {reading.watchOuts.map((w) => (
+                        <li class="text-base text-muted">{w}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-muted">{s.whoShouldRead}</p>
+                    <p class="mt-1 text-base text-[var(--text)]">{reading.whoShouldRead}</p>
+                  </div>
+
+                  {reading.domains.length > 0 && (
+                    <ul class="flex flex-wrap gap-1.5">
+                      {reading.domains.map((domain) => (
+                        <li class="rounded-full bg-[var(--surface-glass-strong)] px-2.5 py-1 text-xs text-muted">
+                          {domain}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {reading.sourceUrl && (
+                    <a
+                      href={reading.sourceUrl}
+                      class="mt-auto text-sm font-medium text-[var(--accent)] hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {s.readMore}
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--surface-glass-strong);
+  }
+
+  .verdict-badge[data-verdict='foundational'] { color: var(--accent); }
+  .verdict-badge[data-verdict='worth-your-hours'] { color: var(--success); }
+  .verdict-badge[data-verdict='situational'] { color: var(--warn); }
+  .verdict-badge[data-verdict='skip-unless'] { color: var(--text-muted); }
+</style>

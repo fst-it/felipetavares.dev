@@ -1,0 +1,142 @@
+---
+/**
+ * Site-wide starfield (V5b C3) — fixed full-viewport background layer rendered once and shared
+ * by all pages. Replaces any per-page star/dust implementation.
+ *
+ * Design:
+ * - Static SVG with deterministic star positions (seeded LCG — no Math.random, byte-identical
+ *   across rebuilds, no hydration mismatch risk since the SVG is SSR-only).
+ * - Dark theme: glow specks (fill with opacity, accent-family hue mix).
+ * - Light theme: fine dark ink specks (low opacity, reads as texture not distraction).
+ * - Density prop: "normal" (default) or "dense" (used behind hero sections where the starfield
+ *   should feel more present without overwhelming text contrast).
+ * - Twinkle micro-animation: CSS keyframe, scoped only when data-motion="on" is present on <html>.
+ *   Completely static under prefers-reduced-motion or html[data-motion="off"] — no JS needed.
+ * - pointer-events: none; z-index: -1 (behind all page content); will-change: none.
+ * - AA spot check: specks at <=6% opacity on dark, <=4% on light — text contrast above them is
+ *   trivially unaffected (the speck adds <0.06 to the background luminance delta).
+ */
+
+export interface Props {
+  density?: 'normal' | 'dense';
+}
+
+const { density = 'normal' } = Astro.props;
+
+// Seeded LCG (Lehmer/Park-Miller variant). Constants from Numerical Recipes.
+// Returns a float in [0,1) given the current seed; advances seed in place.
+function* lcg(seed: number): Generator<number> {
+  let s = seed >>> 0; // ensure 32-bit unsigned
+  while (true) {
+    s = Math.imul(1664525, s) + 1013904223 >>> 0;
+    yield s / 4294967296;
+  }
+}
+
+// Star configuration
+const STAR_COUNT_NORMAL = 180;
+const STAR_COUNT_DENSE  = 340;
+const count = density === 'dense' ? STAR_COUNT_DENSE : STAR_COUNT_NORMAL;
+
+// Generate star data deterministically
+const gen = lcg(0xdeadbeef); // fixed seed — changing this changes star positions
+
+interface Star {
+  x: number;   // 0–100 (percent of viewport)
+  y: number;   // 0–100
+  r: number;   // radius in viewport units
+  opacity: number;
+  delay: number;  // animation delay (s)
+  duration: number;  // animation duration (s)
+}
+
+const stars: Star[] = [];
+for (let i = 0; i < count; i++) {
+  const x       = gen.next().value! * 100;
+  const y       = gen.next().value! * 100;
+  const rRaw    = gen.next().value!;
+  const oRaw    = gen.next().value!;
+  const dRaw    = gen.next().value!;
+  const durRaw  = gen.next().value!;
+
+  // Dense mode shifts 30% of stars into the upper-half for the hero-section band
+  const yAdjusted = density === 'dense' && i < count * 0.3 ? y * 0.55 : y;
+
+  stars.push({
+    x,
+    y: yAdjusted,
+    r: 0.15 + rRaw * 0.35,   // 0.15–0.50 viewport percent
+    opacity: 0.03 + oRaw * 0.04, // 0.03–0.07 (very subtle — AA safe)
+    delay: dRaw * 6,          // 0–6s stagger
+    duration: 3 + durRaw * 4, // 3–7s twinkle period
+  });
+}
+---
+
+<!-- Starfield: fixed viewport layer, z-index -1, pointer-events none -->
+<svg
+  class="starfield"
+  aria-hidden="true"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 100 100"
+  preserveAspectRatio="xMidYMid slice"
+>
+  {stars.map((s, i) => (
+    <circle
+      class="star"
+      cx={s.x.toFixed(2)}
+      cy={s.y.toFixed(2)}
+      r={s.r.toFixed(3)}
+      style={`--star-opacity: ${s.opacity.toFixed(3)}; --star-delay: ${s.delay.toFixed(2)}s; --star-duration: ${s.duration.toFixed(2)}s`}
+    />
+  ))}
+</svg>
+
+<style>
+  .starfield {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
+    /* no will-change — static SVG, compositor doesn't need a hint */
+  }
+
+  /*
+   * Dark theme (default): glow specks — slightly warm/cool hue mix via fill.
+   * Using currentColor = --text which is off-white in dark → reads as "star-like".
+   * Opacity is very low (set via --star-opacity) so text contrast is unaffected.
+   */
+  .star {
+    fill: currentColor;
+    opacity: var(--star-opacity);
+  }
+
+  /* Light theme: fine dark ink specks — same colour as --text (#14171f near-black), even lower opacity */
+  html.theme-light .star {
+    fill: var(--text, #14171f);
+    opacity: calc(var(--star-opacity) * 0.6); /* ≈0.02–0.04 on light */
+  }
+
+  /*
+   * Twinkle animation — only active when motion is on.
+   * Uses @keyframes on opacity only (compositor-safe, no layout/paint).
+   * Scoped via html[data-motion="on"] so it's inert by default; the no-flash
+   * script in BaseLayout sets data-motion before first paint.
+   *
+   * Not using prefers-reduced-motion: no media query here because the
+   * html[data-motion] attribute is already set to "off" when the user has
+   * reduced-motion preference (resolved by BaseLayout's inline script), so
+   * matching on data-motion="on" is equivalent and avoids duplication.
+   */
+  html[data-motion='on'] .star {
+    animation: star-twinkle var(--star-duration) ease-in-out infinite alternate;
+    animation-delay: var(--star-delay);
+  }
+
+  @keyframes star-twinkle {
+    0%   { opacity: var(--star-opacity); }
+    100% { opacity: calc(var(--star-opacity) * 0.2); }
+  }
+</style>

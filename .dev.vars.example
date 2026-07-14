@@ -1,0 +1,41 @@
+# Copy to .dev.vars for local development (gitignored). `pnpm dev` / `wrangler` read this file.
+# In production these are set as Cloudflare Pages/Workers environment variables/secrets.
+
+# Resend API key (https://resend.com) — required to actually send contact-form emails.
+# When absent, /api/contact falls back to a console-logging dev adapter so the form is
+# testable locally without a real key.
+RESEND_API_KEY=
+
+# Cloudflare Turnstile secret key — server-side token verification.
+# Default below is Cloudflare's official "always passes" test secret; safe for local dev only.
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+
+# Cloudflare Turnstile site key — used client-side to render the widget (PUBLIC_ prefix
+# exposes it to the browser bundle, which is expected for a Turnstile sitekey).
+# Default below is Cloudflare's official "always passes" test sitekey; safe for local dev only.
+PUBLIC_TURNSTILE_SITEKEY=1x00000000000000000000AA
+
+# Destination inbox for contact-form submissions.
+CONTACT_TO_EMAIL=contact@felipetavares.dev
+
+# --- Analytics (V3c commit 3) ---
+
+# Optional: Cloudflare Web Analytics site token. Get it from the Cloudflare dashboard ->
+# Analytics & Logs -> Web Analytics -> "Add a site" (felipetavares.dev) -> the token shown in the
+# generated <script> snippet's "token" field. When absent (the default), src/components/astro/
+# Analytics.astro renders nothing — no beacon script, no request to Cloudflare, analytics fully off.
+PUBLIC_CF_ANALYTICS_TOKEN=
+
+# --- Chatbot (phase 4, spec section 8) ---
+
+# Optional: activates the Anthropic provider (Claude Haiku) as the LLM router's primary,
+# ahead of Workers AI (see src/config/llm.ts). When absent, the router falls through to
+# Workers AI in production, or to EchoDevProvider (no network, no keys) in local dev — the
+# chat widget is fully testable locally without setting this.
+ANTHROPIC_API_KEY=
+
+# The AI (Workers AI) and VECTORIZE bindings used by WorkersAiProvider / VectorizeIndex are
+# Cloudflare bindings, not .dev.vars secrets — they're declared in wrangler.jsonc and only
+# exist once this project is connected to a real Cloudflare account and deployed (see
+# docs/chatbot.md). Locally, `pnpm dev` always uses LexicalIndex + EchoDevProvider/router
+# fallbacks instead, so no local equivalent is needed here.

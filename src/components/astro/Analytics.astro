@@ -1,0 +1,22 @@
+---
+/**
+ * Cloudflare Web Analytics beacon (V3c commit 3) — cookieless, no client-side JS this site
+ * controls, no consent banner required (see /privacy). Renders nothing at all when
+ * `siteConfig.cfAnalyticsToken` is absent (the default until Felipe creates the analytics site in
+ * the Cloudflare dashboard and sets `PUBLIC_CF_ANALYTICS_TOKEN` — see docs/chatbot.md's
+ * "Deployment activation steps" section), so local dev and any build without the env var stay
+ * beacon-free.
+ */
+import { siteConfig } from '../../config/site';
+---
+
+{
+  siteConfig.cfAnalyticsToken && (
+    <script
+      is:inline
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon={`{"token": "${siteConfig.cfAnalyticsToken}"}`}
+    />
+  )
+}

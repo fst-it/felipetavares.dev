@@ -1,0 +1,228 @@
+{
+  "site": {
+    "positioning": {
+      "statement": "Felipe Tavares é um líder sênior de arquitetura corporativa e de negócios, com 18 anos de experiência em trading, banking, consultoria e manufatura. O fio condutor: traduzir processos operacionais e de negociação complexos em arquiteturas-alvo defensáveis e, cada vez mais, transformar estratégia de IA e dados em valor de negócio mensurável. Lidera em uma estrutura matricial global e já levou a arquitetura do papel de gatekeeper para o de orquestrador e entrega mão na massa."
+    },
+    "hero": {
+      "headline": "Arquitetura corporativa e estratégia de IA, construídas para sobreviver ao contato com o negócio real.",
+      "slogan": "Arquitetando ambição em IA em realidade empresarial.",
+      "subhead": "18 anos transformando estratégias de Arquitetura, IA, Dados, Plataforma e Gestão de Produto em valor entregue.",
+      "primaryCtaLabel": "Veja a história completa",
+      "primaryCtaHref": "/experience",
+      "secondaryCtaLabel": "Agendar uma conversa",
+      "secondaryCtaHref": "/contact"
+    },
+    "skillDomains": [
+      {
+        "name": "AI & Agentic Engineering",
+        "shortLabel": "IA & Agêntico",
+        "blurb": "Construiu o business case para um valor de oito dígitos em IA e dados no trading de commodities, entregando mão na massa plataformas de arquitetura potencializadas por IA.",
+        "weight": 13
+      },
+      {
+        "name": "Enterprise & Business Architecture",
+        "shortLabel": "Arq. Corporativa",
+        "blurb": "Lidera uma função central de arquitetura: autor dos Princípios Norteadores de Arquitetura e do modelo de comportamento do arquiteto em uma organização global federada.",
+        "weight": 12
+      },
+      {
+        "name": "Data Architecture & Engineering",
+        "shortLabel": "Arq. de Dados",
+        "blurb": "Arquitetou o estado futuro de uma plataforma de dados corporativa de oito dígitos (lakehouse, streaming, API-first), hoje sustentando os domínios de trading.",
+        "weight": 11
+      },
+      {
+        "name": "Cloud & Platform Architecture",
+        "shortLabel": "Cloud & Plataforma",
+        "blurb": "Conduz um modelo operacional de Plataforma como Produto na AWS: golden paths, IaC e Policy as Code, um catálogo de pipelines Terraform.",
+        "weight": 10
+      },
+      {
+        "name": "Integration Architecture",
+        "shortLabel": "Integração",
+        "blurb": "Definiu a arquitetura de integração orientada a eventos e API-led do estado futuro corporativo, e lidera sua adoção nos programas globais de trading.",
+        "weight": 9
+      },
+      {
+        "name": "Digital Strategy & IT Strategy",
+        "shortLabel": "Estratégia Digital",
+        "blurb": "Define estratégia de tecnologia para domínios complexos e regulados, incluindo uma avaliação multi-fornecedor de comprar versus construir para sistemas de trading de commodities.",
+        "weight": 8
+      },
+      {
+        "name": "Data Management & Analytics",
+        "shortLabel": "Dados & Analytics",
+        "blurb": "Entregou produtos de dados responsáveis por um aumento de receita de dois dígitos em milhões, além de reduções de custo multimilionárias em todo o portfólio de dados de produto.",
+        "weight": 7
+      },
+      {
+        "name": "Software & Agentic Engineering",
+        "shortLabel": "Eng. de Software",
+        "blurb": "Constrói mão na massa: uma plataforma interna de arquitetura potencializada por IA que monta automaticamente o contexto para equipes de entrega e assistentes de código com IA.",
+        "weight": 6
+      },
+      {
+        "name": "SAP Delivery, Strategy & Architecture",
+        "shortLabel": "SAP Delivery",
+        "blurb": "Liderou arquitetura de negócio em SAP S/4HANA e transformações de order-to-cash, reduzindo pela metade o custo de um sistema fortemente customizado.",
+        "weight": 5
+      },
+      {
+        "name": "Portfolio & Program Management",
+        "shortLabel": "Portfólio & Prog.",
+        "blurb": "Membro do time de gestão em um programa de migração para nuvem de nove dígitos, com direção funcional sobre uma grande organização de arquitetura e engenharia.",
+        "weight": 4
+      },
+      {
+        "name": "Product Management & Agile Delivery",
+        "shortLabel": "Produto & Agile",
+        "blurb": "Praticante de SCRUM e SAFe, certificado CSPO e CSM. Trouxe disciplina de entrega ágil para modelos operacionais de ERP/tesouraria e arquitetura.",
+        "weight": 4
+      },
+      {
+        "name": "Technology Leadership & Org Design",
+        "shortLabel": "Liderança Tech",
+        "blurb": "Liderou diretamente múltiplas equipes de engenharia, arquitetura e produto, cada uma com seu próprio líder, e centenas de pessoas a mais por meio de um modelo operacional matricial federado.",
+        "weight": 4
+      }
+    ],
+    "credibility": {
+      "statements": [
+        "Liderou diretamente múltiplas equipes de engenharia, arquitetura e produto, cada uma com seu próprio líder",
+        "Liderou centenas de pessoas em equipes por meio de um modelo operacional matricial",
+        "18 anos em trading, banking, consultoria e manufatura",
+        "Levou a arquitetura do papel de gatekeeper para o de orquestrador e entrega mão na massa"
+      ]
+    },
+    "intentChips": [
+      { "label": "Formas de trabalharmos juntos", "href": "/contact#ways-to-work-together" },
+      { "label": "Aprofundamento técnico", "href": "/projects" },
+      { "label": "Buscando um palestrante?", "href": "/speaking" }
+    ],
+    "waysToWorkTogether": {
+      "eyebrow": "Além do dia a dia",
+      "heading": "Formas de trabalharmos juntos",
+      "cards": [
+        {
+          "title": "Mentoria",
+          "body": "Faço mentoria de engenheiros e arquitetos que estão lidando com essas mesmas questões: como estruturar um sistema, como crescer para o próximo cargo.",
+          "topic": "Advisory"
+        },
+        {
+          "title": "Conversas de consultoria",
+          "body": "Participo de comitês internos de arquitetura e governança, e assessoro fundadores construindo em áreas próximas. Se você quer uma segunda opinião sobre uma arquitetura-alvo ou uma aposta inicial em IA, essa é a conversa.",
+          "topic": "Advisory"
+        },
+        {
+          "title": "Palestras e painéis",
+          "body": "Falo sobre arquitetura, estratégia de IA e liderança tecnológica em conferências, painéis e contextos educacionais. Com exemplos concretos, sem slide genérico.",
+          "topic": "Speaking"
+        }
+      ]
+    },
+    "socialLinks": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/in/felipetavares/",
+        "icon": "linkedin"
+      },
+      {
+        "label": "GitHub",
+        "url": "https://github.com/fst-it",
+        "icon": "github"
+      },
+      {
+        "label": "Substack",
+        "url": "https://fstit.substack.com",
+        "icon": "rss"
+      }
+    ],
+    "dossier": {
+      "summary": "Sr. Principal Architect Leader com 18 anos em trading, banking, consultoria e manufatura. Liderança de arquitetura corporativa em nível de diretoria, à frente de uma função central de arquitetura com direção funcional sobre uma grande organização de arquitetura e engenharia (tipicamente ≈10 diretos, 20+ em linha pontilhada). Lidera arquitetura corporativa e de negócios, IA e estratégia de dados nos portfólios de Agriculture & Trading e Data & Integration de uma organização Fortune 500 global, incluindo estratégia corporativa de CTRM. Construiu o business case atribuindo valor de oito dígitos a iniciativas de IA e dados, e arquitetou o estado futuro de uma plataforma de dados corporativa de oito dígitos. Leva a arquitetura do papel de gatekeeper para o de orquestrador e entrega mão na massa.",
+      "competencyMatrix": [
+        {
+          "domain": "Enterprise & Business Architecture",
+          "depth": 5,
+          "evidence": "Princípios Norteadores de Arquitetura, modelo de comportamento do arquiteto e processo de governança de arquitetura global em uma organização federada."
+        },
+        {
+          "domain": "Integration Architecture",
+          "depth": 5,
+          "evidence": "Definiu a arquitetura de integração orientada a eventos e API-led do estado futuro corporativo, e lidera sua adoção nos programas globais de trading."
+        },
+        {
+          "domain": "AI & Agentic Engineering",
+          "depth": 4,
+          "evidence": "Business case de valor de oito dígitos em IA/dados; construiu mão na massa uma plataforma interna de arquitetura potencializada por IA (orientada a eventos, CQRS, hexagonal)."
+        },
+        {
+          "domain": "Data Architecture & Engineering",
+          "depth": 4,
+          "evidence": "Arquitetou o estado futuro de uma plataforma de dados corporativa de oito dígitos (lakehouse, streaming, consumo API-first), além da arquitetura de MDM/governança de dados."
+        },
+        {
+          "domain": "Cloud & Platform Architecture",
+          "depth": 4,
+          "evidence": "Conduz um modelo operacional de Plataforma como Produto na AWS: golden paths, IaC e Policy as Code, um catálogo de pipelines Terraform."
+        },
+        {
+          "domain": "Digital Strategy & IT Strategy",
+          "depth": 4,
+          "evidence": "Avaliação multi-fornecedor de comprar versus construir e arquitetura-alvo híbrida para sistemas globais de trading de commodities; estratégia e roadmap de tecnologia para commodities."
+        },
+        {
+          "domain": "Data Management & Analytics",
+          "depth": 4,
+          "evidence": "Entregou produtos de dados responsáveis por um aumento de receita de dois dígitos em milhões, além de reduções de custo multimilionárias em todo o portfólio de dados de produto."
+        },
+        {
+          "domain": "Software & Agentic Engineering",
+          "depth": 4,
+          "evidence": "Constrói mão na massa: uma plataforma interna de arquitetura potencializada por IA que monta automaticamente uma camada de contexto consultável para equipes de entrega e assistentes de código com IA."
+        },
+        {
+          "domain": "SAP Delivery, Strategy & Architecture",
+          "depth": 4,
+          "evidence": "Liderou arquitetura de negócio em SAP S/4HANA e transformações de order-to-cash, incluindo um rollout que reduziu em mais da metade o custo de manutenção de um sistema customizado."
+        },
+        {
+          "domain": "Portfolio & Program Management",
+          "depth": 4,
+          "evidence": "Membro do time de gestão em um programa de migração para nuvem de nove dígitos; direção funcional sobre uma grande organização de arquitetura e engenharia abrangendo trading, integração e dados."
+        },
+        {
+          "domain": "Product Management & Agile Delivery",
+          "depth": 4,
+          "evidence": "Certificado CSPO e CSM; liderança de entrega em SCRUM/SAFe."
+        },
+        {
+          "domain": "Technology Leadership & Org Design",
+          "depth": 4,
+          "evidence": "Liderou diretamente múltiplas equipes de engenharia, arquitetura e produto, cada uma com seu próprio líder, e centenas de pessoas em equipes por meio de um modelo operacional matricial."
+        }
+      ],
+      "education": [
+        {
+          "degree": "Mestrado em Gestão de Sistemas de Informação",
+          "school": "Universidade de Lisboa"
+        },
+        {
+          "degree": "Bacharelado em Sistemas de Informação",
+          "school": "Universidade Federal do Estado do Rio de Janeiro (UNIRIO)"
+        }
+      ],
+      "certifications": [
+        "Certified Scrum Product Owner (CSPO)",
+        "Certified ScrumMaster (CSM)",
+        "SAP Application Professional",
+        "TOGAF, em andamento (previsto para dez/2026)"
+      ],
+      "languages": [
+        { "name": "Inglês", "level": "Fluente" },
+        { "name": "Português", "level": "Nativo" },
+        { "name": "Espanhol", "level": "Intermediário" },
+        { "name": "Francês", "level": "Básico" }
+      ]
+    }
+  }
+}

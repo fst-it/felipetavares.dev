@@ -1,0 +1,187 @@
+---
+import NumberTicker from '../islands/NumberTicker';
+import InlineExpander from './InlineExpander.astro';
+import CountryFlag from './CountryFlag.astro';
+import type { Role } from '../../core/entities/role';
+import { resolveLocale, getStrings } from '../../i18n';
+import { formatMonthYear } from '../../lib/format-date';
+import { countryCodeForLocation } from '../../lib/location-to-flag';
+
+export interface Props {
+  role: Role;
+  index: number;
+}
+
+const { role, index } = Astro.props;
+const locale = resolveLocale(Astro.currentLocale);
+const strings = getStrings(locale);
+
+const period = `${formatMonthYear(role.start, locale)} — ${role.end ? formatMonthYear(role.end, locale) : strings.journey.present}`;
+
+const flagCountry = countryCodeForLocation(role.location);
+const additionalFlagCountry = role.additionalLocation ? countryCodeForLocation(role.additionalLocation) : null;
+---
+
+<li id={`chapter-${index}`} class="journey-chapter" data-chapter={index}>
+  <article class="glass relative rounded-[var(--radius-lg)] p-6 sm:p-10">
+    <header class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+      <div>
+        <p class="font-mono text-xs uppercase tracking-wider text-[var(--accent)]">{period}</p>
+        <h3 class="mt-1 font-display text-xl font-semibold text-[var(--text)] sm:text-2xl">
+          {role.title} · {role.org}
+        </h3>
+      </div>
+      {role.additionalLocation ? (
+        <div class="flex flex-col gap-0.5 text-sm text-muted">
+          <span class="flex items-center gap-1.5">
+            {flagCountry && <CountryFlag country={flagCountry} uniqueKey={role.slug} class="rounded-full" />}
+            {role.location}
+          </span>
+          <span class="flex items-center gap-1.5">
+            {additionalFlagCountry && <CountryFlag country={additionalFlagCountry} uniqueKey={`${role.slug}-b`} class="rounded-full" />}
+            {role.additionalLocation}
+          </span>
+        </div>
+      ) : (
+        <p class="flex items-center gap-1.5 text-sm text-muted">
+          {flagCountry && <CountryFlag country={flagCountry} uniqueKey={role.slug} class="rounded-full" />}
+          {role.location}
+        </p>
+      )}
+    </header>
+
+    <p class="mt-4 font-display text-lg text-[var(--accent-2)]">{role.arc}</p>
+
+    {
+      role.impact.length > 0 && (
+        // `min-w-0` on each grid item (V5a fix 3c): without it, a long unbroken metric string
+        // (several impact entries are prose like "Cut costs by more than half," not just a
+        // number — NumberTicker falls back to static text for those) can force its grid TRACK to
+        // grow past the column's fair share rather than wrap, pushing into/overlapping the next
+        // column's narrative text. `min-w-0` lets the track shrink to the grid's intended size and
+        // wrap the text inside it instead.
+        <dl class="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+          {role.impact.map((item) => (
+            <div class="min-w-0">
+              <dt class="font-mono text-2xl font-bold text-[var(--text)] sm:text-3xl">
+                <NumberTicker value={item.metric} client:visible />
+              </dt>
+              <dd class="mt-2 text-sm text-muted">{item.narrative}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+
+    {
+      role.domains.length > 0 && (
+        <ul class="mt-6 flex flex-wrap gap-2">
+          {role.domains.map((domain) => (
+            <li class="rounded-full bg-[var(--surface-glass-strong)] px-3 py-1 text-xs text-muted">
+              {domain}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    {
+      (role.technologies.length > 0 || (role.techCategories && role.techCategories.length > 0)) && (
+        <div class="mt-4 border-t border-[var(--border-glass)] pt-2">
+          <InlineExpander summaryLabel={strings.journey.techStack}>
+            {role.techCategories && role.techCategories.length > 0 ? (
+              <div class="flex flex-col gap-4 pb-4 pt-2">
+                {role.techCategories.map((group) => (
+                  <div>
+                    <p class="mb-1.5 font-mono text-xs uppercase tracking-wider text-muted">{group.label}</p>
+                    <ul class="flex flex-wrap gap-2">
+                      {group.items.map((tech) => (
+                        <li class="rounded-full bg-[var(--surface-glass-strong)] px-3 py-1 text-xs text-muted">
+                          {tech}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ul class="flex flex-wrap gap-2 pb-4 pt-1">
+                {role.technologies.map((tech) => (
+                  <li class="rounded-full bg-[var(--surface-glass-strong)] px-3 py-1 text-xs text-muted">
+                    {tech}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </InlineExpander>
+        </div>
+      )
+    }
+  </article>
+</li>
+
+<style>
+  /*
+   * Scroll-reveal for role chapters — spec 6.3 #5. Primary mechanism is CSS
+   * scroll-driven animation (`animation-timeline: view()`); browsers without
+   * support (Safari < 17.4, older Firefox) get the IntersectionObserver
+   * fallback below applied via the `.is-visible` class. Both paths honor
+   * prefers-reduced-motion by disabling the animation and keeping content
+   * visible with opacity: 1 (no motion, no penalty to reading the page).
+   */
+  .journey-chapter {
+    opacity: 1;
+  }
+
+  @supports (animation-timeline: view()) {
+    .journey-chapter {
+      animation: chapter-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+  }
+
+  @supports not (animation-timeline: view()) {
+    .journey-chapter {
+      opacity: 0;
+      transform: translateY(24px);
+      transition:
+        opacity var(--duration-reveal) var(--ease-out),
+        transform var(--duration-reveal) var(--ease-out);
+    }
+
+    .journey-chapter.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes chapter-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .journey-chapter {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* Motion kill-switch (src/lib/motion.ts) — same static fallback as the media query above,
+     but reachable via the localStorage override too. */
+  html[data-motion='off'] .journey-chapter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+</style>

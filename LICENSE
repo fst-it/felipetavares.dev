@@ -1,0 +1,40 @@
+MIT License
+
+Copyright 2026 Felipe Tavares
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Content License
+
+The MIT grant above covers only the source code in this repository (TypeScript,
+Astro, CSS, configuration, and scripts). The following are explicitly excluded
+and are NOT covered by the MIT license:
+
+- Everything under content/ (articles, CV data, role descriptions, site copy)
+- Everything under docs/brand/ (brand mark files and imagery)
+- Personal imagery in public/ (brand-glyph.png, favicon files derived from the
+  brand mark, and any other personal photographs or illustrations)
+
+All of the above are copyright Felipe Tavares, all rights reserved. You may
+read them and quote short excerpts with attribution and a link back to
+felipetavares.dev. You may not republish, redistribute, or create derivative
+works from them without written permission. For permissions, contact
+contact@felipetavares.dev.

@@ -1,0 +1,56 @@
+---
+import { contentRepository } from '../../config/site';
+import SectionHeading from './SectionHeading.astro';
+import { resolveLocale, getStrings } from '../../i18n';
+import { formatCardDate } from '../../lib/format-date';
+
+const locale = resolveLocale(Astro.currentLocale);
+const strings = getStrings(locale);
+const articles = (await contentRepository.getArticles()).slice(0, 3);
+
+// Articles stay EN-only in v1 (V3d addendum) — dates are always formatted in English regardless
+// of page locale, matching the "em inglês"-badged content they sit next to.
+---
+
+<section class="px-4 py-11 sm:py-16" aria-labelledby="writing-heading">
+  <div class="mx-auto max-w-6xl">
+    <h2 id="writing-heading" class="sr-only">Latest writing</h2>
+    <SectionHeading
+      eyebrow={strings.home.writingEyebrow}
+      title={strings.home.writingTitle}
+      subtitle={strings.home.writingSubtitle}
+    />
+
+    <!-- Articles stay EN-only in v1 on PT routes (V3d addendum) — cards link to the unprefixed EN
+         article and show a small "em inglês" badge next to the date/reading-time line. -->
+    {
+      articles.length > 0 ? (
+        <div class="mt-10 grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-3">
+          {articles.map((article) => (
+            <a
+              href={`/writing/${article.slug}`}
+              data-card-motion
+              class="glass flex h-full flex-col justify-between rounded-[var(--radius-md)] p-6 transition-transform duration-200 hover:-translate-y-1"
+            >
+              <div>
+                <h3 class="font-display text-lg font-semibold text-[var(--text)]">{article.title}</h3>
+                <p class="mt-2 text-sm text-muted">{article.description}</p>
+              </div>
+              <p class="mt-6 font-mono text-xs text-muted">
+                {formatCardDate(article.pubDate)} · {article.readingTime}
+                {locale === 'pt-br' && (
+                  <>
+                    {' '}
+                    · <span class="uppercase">{strings.home.inEnglishBadge}</span>
+                  </>
+                )}
+              </p>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="mt-10 text-muted">{strings.home.writingEmpty}</p>
+      )
+    }
+  </div>
+</section>

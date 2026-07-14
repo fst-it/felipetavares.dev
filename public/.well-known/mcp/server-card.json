@@ -1,0 +1,46 @@
+{
+  "serverInfo": {
+    "name": "felipetavares-mcp",
+    "version": "0.1.0"
+  },
+  "transport": {
+    "type": "streamable-http",
+    "endpoint": "https://mcp.felipetavares.dev/mcp"
+  },
+  "capabilities": {
+    "tools": [
+      {
+        "name": "get_cv",
+        "description": "Returns Felipe Tavares' CV as a JSON Resume document (jsonresume.org schema)."
+      },
+      {
+        "name": "get_profile",
+        "description": "Returns Felipe's positioning statement, 12 domains of expertise, and public contact links."
+      },
+      {
+        "name": "search_content",
+        "description": "Lexical (BM25) full-text search over every published page on felipetavares.dev."
+      },
+      {
+        "name": "get_page",
+        "description": "Returns the markdown content of a site page by path (static paths or /projects/<slug>, /writing/<slug>)."
+      },
+      {
+        "name": "list_projects",
+        "description": "Lists all projects with metadata: slug, title, tagline, status, stack, and links."
+      },
+      {
+        "name": "list_articles",
+        "description": "Lists all published articles with metadata: slug, title, description, tags, and dates."
+      },
+      {
+        "name": "ask_felipe",
+        "description": "Natural-language Q&A grounded in site content via retrieval-augmented LLM. Rate-limited: 10 calls/hour."
+      },
+      {
+        "name": "leave_message",
+        "description": "Sends a plain-text email to Felipe on an agent user's behalf. Rate-limited: 3 calls/day."
+      }
+    ]
+  }
+}

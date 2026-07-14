@@ -1,0 +1,106 @@
+---
+/**
+ * Reusable inline disclosure primitive (V3 addendum: journey tech expanders). Built on native
+ * `<details>/<summary>` for built-in keyboard support, semantics, and a free `aria-expanded`-
+ * equivalent state (`[open]`) — no JS required for the open/close behavior itself. The smooth
+ * height animation is CSS-only (`grid-template-rows` 0fr -> 1fr trick), so it's automatically
+ * static-open (no animation, just the browser's native instant show/hide) under
+ * `prefers-reduced-motion`/motion-off without any extra plumbing.
+ *
+ * V3b will reuse this sitewide — keep it content-agnostic (a `summaryLabel` string + a default
+ * slot for the revealed content).
+ */
+export interface Props {
+  /** Trigger label, e.g. "Tech stack". Spec convention: render with a "▸" affordance in the
+   *  trigger, not baked into this string. */
+  summaryLabel: string;
+  /** Optional id for the trigger, useful if a caller needs to target it (e.g. tests). */
+  id?: string;
+}
+
+const { summaryLabel, id } = Astro.props;
+---
+
+<details class="inline-expander">
+  <summary id={id} class="inline-expander-trigger">
+    <span>{summaryLabel}</span>
+    <span class="inline-expander-caret" aria-hidden="true">&#9656;</span>
+  </summary>
+  <div class="inline-expander-body">
+    <div class="inline-expander-body-inner">
+      <slot />
+    </div>
+  </div>
+</details>
+
+<style>
+  .inline-expander {
+    width: 100%;
+  }
+
+  /* Native <summary> ships its own disclosure triangle in most browsers — replace it with our
+     own caret (rotated via [open]) and reset the default block layout to a >=44px flex row. */
+  .inline-expander-trigger {
+    display: flex;
+    min-height: 44px;
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .inline-expander-trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .inline-expander-caret {
+    display: inline-block;
+    transition: transform var(--duration-micro, 200ms) var(--ease-out, ease-out);
+  }
+
+  details[open] > .inline-expander-trigger .inline-expander-caret {
+    transform: rotate(90deg);
+  }
+
+  /* Smooth height animation via the grid-rows 0fr->1fr trick (no JS height measurement needed).
+     `<details>` doesn't support animating [open] directly, so the collapse/expand lives entirely
+     on this wrapper grid, driven by the [open] attribute selector below. */
+  .inline-expander-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--duration-reveal, 400ms) var(--ease-out, ease-out);
+  }
+
+  details[open] > .inline-expander-body {
+    grid-template-rows: 1fr;
+  }
+
+  .inline-expander-body-inner {
+    overflow: hidden;
+  }
+
+  /* Reduced motion / motion-off: instant show/hide, no animated height (spec: "static-open under
+     motion-off"). */
+  @media (prefers-reduced-motion: reduce) {
+    .inline-expander-body {
+      transition: none;
+    }
+
+    .inline-expander-caret {
+      transition: none;
+    }
+  }
+
+  html[data-motion='off'] .inline-expander-body {
+    transition: none;
+  }
+
+  html[data-motion='off'] .inline-expander-caret {
+    transition: none;
+  }
+</style>

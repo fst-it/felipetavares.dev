@@ -1,0 +1,17 @@
+{
+  "name": "fst-vectorize-admin",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-01",
+  "vars": {
+    "ADMIN_TOKEN": "CHANGE-ME-TO-A-RANDOM-STRING"
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "fst-chat"
+    }
+  ]
+}

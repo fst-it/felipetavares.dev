@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HeroDeepSignal from '../../components/astro/HeroDeepSignal.astro';
+import SkillDomainGrid from '../../components/astro/SkillDomainGrid.astro';
+import FeaturedProjects from '../../components/astro/FeaturedProjects.astro';
+import LatestWriting from '../../components/astro/LatestWriting.astro';
+import CredibilityCta from '../../components/astro/CredibilityCta.astro';
+import { siteConfig, contentRepository } from '../../config/site';
+
+const socialLinks = await contentRepository.getSocialLinks();
+
+// Person JSON-LD (spec section 10) — site-wide identity; `inLanguage` (V3d addendum) marks this
+// as the PT-BR rendering of the same Person entity described on the EN Home page.
+const personJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: siteConfig.name,
+  url: siteConfig.url,
+  sameAs: socialLinks.map((link) => link.url),
+  inLanguage: 'pt-BR',
+};
+---
+
+<BaseLayout title={siteConfig.name} markdownTwin="/pt/home.md" alternatePath="/">
+  <script type="application/ld+json" set:html={JSON.stringify(personJsonLd)} is:inline />
+  <HeroDeepSignal />
+  <SkillDomainGrid />
+  <FeaturedProjects />
+  <LatestWriting />
+  <CredibilityCta />
+</BaseLayout>

@@ -1,0 +1,109 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BreadcrumbList from '../../components/astro/BreadcrumbList.astro';
+import { siteConfig } from '../../config/site';
+
+const pageTitle = 'Accessibility';
+const pageDescription =
+  "Felipe Tavares' accessibility statement: WCAG 2.1 AA target, on-site controls for motion, contrast, and text size, and how to report an issue.";
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} canonical={`${siteConfig.url}/accessibility`}>
+  <BreadcrumbList crumbs={[
+    { name: 'Home', url: siteConfig.url },
+    { name: 'Accessibility', url: `${siteConfig.url}/accessibility` },
+  ]} />
+  <section class="relative overflow-hidden px-4 pb-11 pt-11 sm:pt-16" aria-labelledby="a11y-heading">
+    <div class="gradient-mesh" aria-hidden="true">
+      <div class="mesh-blob"></div>
+    </div>
+
+    <div class="relative z-10 mx-auto max-w-3xl text-center">
+      <p class="mb-2 font-mono text-sm uppercase tracking-wider text-[var(--accent)]">Accessibility</p>
+      <h1 id="a11y-heading" class="text-balance" data-reveal>Built to be usable by everyone</h1>
+      <p class="mx-auto mt-6 max-w-2xl text-lg text-muted">
+        This site targets WCAG 2.1 AA and ships on-page controls to adjust motion, contrast, and
+        text size without leaving the page.
+      </p>
+    </div>
+  </section>
+
+  <section class="px-4 pb-11 sm:pb-16">
+    <div class="mx-auto flex max-w-3xl flex-col gap-6">
+      <div class="glass rounded-[var(--radius-lg)] p-8">
+        <h2 class="font-display text-xl font-semibold">Standard</h2>
+        <p class="mt-3 text-muted">
+          This site is built to conform to <strong class="text-[var(--text)]">WCAG 2.1 Level AA</strong>:
+          keyboard-operable navigation and interactive elements, visible focus states, sufficient
+          color contrast in both themes, semantic landmarks and heading structure, and alt text or
+          accessible names on non-text content.
+        </p>
+      </div>
+
+      <div class="glass rounded-[var(--radius-lg)] p-8">
+        <h2 class="font-display text-xl font-semibold">On-page controls</h2>
+        <p class="mt-3 text-muted">
+          The accessibility badge in the bottom-left corner of every page opens a panel with these
+          controls, each persisted to this browser and applied instantly:
+        </p>
+        <ul class="mt-4 flex flex-col gap-3">
+          <li class="rounded-[var(--radius-sm)] bg-[var(--surface-glass-strong)] p-4">
+            <p class="font-medium text-[var(--text)]">Reduce motion</p>
+            <p class="mt-1 text-sm text-muted">
+              Stops every animation on the site: smooth scrolling, the hero diagram, its WebGL
+              particle layer, scroll-triggered reveals, card hover effects, and CSS keyframe
+              animations. Live, without a reload. It also respects your operating system's
+              "reduce motion" setting by default, and outranks the visual-effects setting below.
+            </p>
+          </li>
+          <li class="rounded-[var(--radius-sm)] bg-[var(--surface-glass-strong)] p-4">
+            <p class="font-medium text-[var(--text)]">High contrast</p>
+            <p class="mt-1 text-sm text-muted">
+              Switches to a higher-contrast palette (targeting 7:1 for body text) in both light and
+              dark themes, and makes glass surfaces more opaque.
+            </p>
+          </li>
+          <li class="rounded-[var(--radius-sm)] bg-[var(--surface-glass-strong)] p-4">
+            <p class="font-medium text-[var(--text)]">Larger text</p>
+            <p class="mt-1 text-sm text-muted">
+              Increases the base text size site-wide. Layouts use fluid type and spacing, so this
+              shouldn't break any page.
+            </p>
+          </li>
+          <li class="rounded-[var(--radius-sm)] bg-[var(--surface-glass-strong)] p-4">
+            <p class="font-medium text-[var(--text)]">Visual effects</p>
+            <p class="mt-1 text-sm text-muted">
+              Chooses how much animation the hero diagram runs: Auto detects your device's
+              capabilities, Full always attempts the richest WebGL layer, Simple keeps the
+              animated diagram without WebGL, and Off shows a static diagram.
+            </p>
+          </li>
+        </ul>
+      </div>
+
+      <div class="glass rounded-[var(--radius-lg)] p-8">
+        <h2 class="font-display text-xl font-semibold">Known limitations</h2>
+        <p class="mt-3 text-muted">
+          The hero's living-blueprint diagram is complex SVG; it ships a text alternative
+          summarizing the domains it represents, but the interactive pointer effects are
+          decorative only and skipped entirely under reduced motion or on touch devices. Some
+          third-party embeds (e.g. the newsletter form) may not fully match this site's contrast
+          controls. If you hit a barrier this page doesn't cover, please tell us.
+        </p>
+      </div>
+
+      <div class="border-beam glass rounded-[var(--radius-lg)] p-8 text-center">
+        <h2 class="font-display text-xl font-semibold">Report an issue</h2>
+        <p class="mx-auto mt-3 max-w-xl text-muted">
+          Found something that isn't accessible? Reach out and it will be looked at directly.
+        </p>
+        <a
+          href="/contact"
+          class="border-beam mt-6 inline-block rounded-[var(--radius-sm)] bg-[var(--accent)] px-6 py-3 text-center font-semibold text-[var(--accent-contrast)] btn-interactive"
+        >
+          Contact
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,139 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/astro/SectionHeading.astro';
+import SocialIcon from '../../components/astro/SocialIcon.astro';
+import BreadcrumbList from '../../components/astro/BreadcrumbList.astro';
+import ContactForm from '../../components/islands/ContactForm';
+import { siteConfig, contentRepository } from '../../config/site';
+import { getStrings } from '../../i18n';
+
+const socialLinks = await contentRepository.getSocialLinks();
+const waysToWorkTogether = await contentRepository.getWaysToWorkTogether();
+const strings = getStrings('en');
+
+const pageTitle = 'Contact';
+const pageDescription =
+  'Get in touch with Felipe Tavares: book a call, send a message, or reach out directly for speaking, advisory, or a straightforward architecture question.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} canonical={`${siteConfig.url}/contact`} markdownTwin="/contact/index.md">
+  <BreadcrumbList crumbs={[
+    { name: 'Home', url: siteConfig.url },
+    { name: 'Contact', url: `${siteConfig.url}/contact` },
+  ]} />
+  <section class="relative overflow-hidden px-4 pb-11 pt-11 sm:pt-16" aria-labelledby="contact-heading">
+    <div class="gradient-mesh" aria-hidden="true">
+      <div class="mesh-blob"></div>
+    </div>
+
+    <div class="relative z-10 mx-auto max-w-3xl text-center">
+      <p class="mb-2 font-mono text-sm uppercase tracking-wider text-[var(--accent)]">Contact</p>
+      <h1 id="contact-heading" class="text-balance" data-reveal>Let's talk</h1>
+      <p class="mx-auto mt-6 max-w-2xl text-lg text-muted">
+        Speaking invitation, peer discussion, or an advisory engagement, pick whichever is fastest for you.
+      </p>
+    </div>
+  </section>
+
+  <!--
+    "Ways to work together" (owner interview 2026-07-06) — the advisory/stewardship block, sitting
+    above the tiered contact section below. Each card's CTA links to the send-message form with
+    `?topic=` pre-set to the matching contact-form topic (src/core/services/contact-schema.ts);
+    ContactForm.tsx reads that query param client-side on mount (this site is static output, so
+    there's no request to read it from server-side) and pre-selects its topic dropdown.
+  -->
+  <section id="ways-to-work-together" class="px-4 pt-11 sm:pt-16 pb-4 sm:pb-8">
+    <div class="mx-auto max-w-5xl">
+      <SectionHeading
+        eyebrow={waysToWorkTogether.eyebrow}
+        title={waysToWorkTogether.heading}
+        subtitle={waysToWorkTogether.subtitle}
+      />
+      <ul class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+        {
+          waysToWorkTogether.cards.map((card) => (
+            <li class="glass rounded-[var(--radius-lg)] p-6">
+              <h3 class="font-display text-lg font-semibold">{card.title}</h3>
+              <p class="mt-2 text-sm text-muted">{card.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="px-4 pb-11 sm:pb-16">
+    <div class="mx-auto grid max-w-5xl grid-cols-1 gap-6 lg:grid-cols-3">
+      <!-- Tier 1: Book a call (primary) -->
+      <div class="border-beam glass flex flex-col justify-between rounded-[var(--radius-lg)] p-8 lg:col-span-3">
+        <div>
+          <p class="mb-2 font-mono text-xs uppercase tracking-wider text-[var(--accent)]">Fastest</p>
+          <h2 class="font-display text-2xl font-semibold">Book 30 minutes</h2>
+          </div>
+        <div class="mt-6">
+          <a
+            href={siteConfig.bookingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="relative inline-block rounded-[var(--radius-sm)] bg-[var(--accent)] accent-bg-image px-6 py-3 text-center font-semibold text-[var(--accent-contrast)] btn-interactive"
+          >
+            Book 30 min on Calendly
+          </a>
+        </div>
+      </div>
+
+      <!-- Tier 2: Contact form -->
+      <div id="send-message" class="glass rounded-[var(--radius-lg)] p-8 lg:col-span-2">
+        <SectionHeading eyebrow={strings.contactPage.or} title="Send a message" subtitle={strings.contactPage.formSubtitle} />
+        <div class="mt-6">
+          <ContactForm client:load turnstileSitekey={siteConfig.turnstileSitekey} locale="en" strings={strings.contactForm} />
+        </div>
+        <p class="mt-4 text-xs text-muted">Response-time expectation: within 2 business days.</p>
+      </div>
+
+      <!-- Tier 3: Direct links -->
+      <div class="glass flex flex-col gap-4 rounded-[var(--radius-lg)] p-8">
+        <SectionHeading eyebrow="Direct" title="Elsewhere" />
+        <ul class="flex flex-col gap-3">
+          <li>
+            <a
+              href={`mailto:${siteConfig.contactEmail}`}
+              class="flex min-h-11 items-center gap-3 text-sm font-medium text-[var(--text)] transition-colors duration-200 hover:text-[var(--accent)]"
+            >
+              <SocialIcon icon="email" />
+              {siteConfig.contactEmail}
+            </a>
+          </li>
+          {
+            socialLinks
+              .filter((link) => link.icon === 'linkedin' || link.icon === 'github')
+              .map((link) => (
+                <li>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer me"
+                    class="flex min-h-11 items-center gap-3 text-sm font-medium text-[var(--text)] transition-colors duration-200 hover:text-[var(--accent)]"
+                  >
+                    <SocialIcon icon={link.icon as 'github' | 'linkedin'} />
+                    {link.label}
+                  </a>
+                </li>
+              ))
+          }
+          <li>
+            <a
+              href={siteConfig.substackUrl}
+              target="_blank"
+              rel="noopener noreferrer me"
+              class="flex min-h-11 items-center gap-3 text-sm font-medium text-[var(--text)] transition-colors duration-200 hover:text-[var(--accent)]"
+            >
+              <SocialIcon icon="substack" />
+              Substack
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

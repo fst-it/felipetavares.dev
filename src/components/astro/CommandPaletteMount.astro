@@ -1,0 +1,91 @@
+---
+/**
+ * Server-side index builder for the command palette (V3c commit 1). Builds the static
+ * `PaletteEntry[]` list once at render time from `ContentRepository` + `src/config/nav.ts` — no
+ * client-side fetch, no search service. Rendered once from `BaseLayout` alongside the other
+ * lazy-loaded islands.
+ */
+import CommandPalette from '../islands/CommandPalette';
+import { primaryNav, bookACallHref } from '../../config/nav';
+import { contentRepository, siteConfig } from '../../config/site';
+import { getStrings, localeToPathPrefix, type Locale } from '../../i18n';
+import type { PaletteEntry } from '../../core/services/command-palette';
+
+export interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const strings = getStrings(locale);
+const prefix = localeToPathPrefix(locale);
+
+const [projects, articles, talks] = await Promise.all([
+  contentRepository.getProjects(),
+  contentRepository.getArticles(),
+  contentRepository.getTalks(),
+]);
+
+// "Pages" and "Actions" are site chrome — fully localized (title + href both point at the
+// current-locale route). "Projects"/"Writing"/"Speaking" are dynamic content entries that stay
+// EN-only in v1 (see the V3d addendum's deliberate translation-scope decision), so their titles
+// stay as authored and their hrefs always point at the unprefixed EN route regardless of locale.
+const pageEntries: PaletteEntry[] = [
+  { id: 'nav-home', group: 'Pages', title: locale === 'pt-br' ? 'Início' : 'Home', href: prefix ? `${prefix}/` : '/' },
+  ...primaryNav.map((link) => ({
+    id: `nav-${link.href}`,
+    group: 'Pages' as const,
+    title: { experience: strings.nav.experience, projects: strings.nav.projects, writing: strings.nav.writing, speaking: strings.nav.speaking, contact: strings.nav.contact }[
+      link.href.replace('/', '') as 'experience' | 'projects' | 'writing' | 'speaking' | 'contact'
+    ] ?? link.label,
+    href: `${prefix}${link.href}`,
+  })),
+  // nav-reading removed from palette until section is seeded — ledger row 66;
+  // re-enable when reading nav link is restored: { id: 'nav-reading', ... href: `${prefix}/reading` }
+  { id: 'nav-dossier', group: 'Pages', title: locale === 'pt-br' ? 'Dossiê Executivo' : 'Executive Dossier', href: `${prefix}/experience/dossier` },
+  { id: 'nav-accessibility', group: 'Pages', title: strings.a11yPanel.title, href: `${prefix}/accessibility` },
+  { id: 'nav-privacy', group: 'Pages', title: strings.footer.privacy, href: `${prefix}/privacy` },
+];
+
+const projectEntries: PaletteEntry[] = projects.map((p) => ({
+  id: `project-${p.slug}`,
+  group: 'Projects',
+  title: p.title,
+  subtitle: p.tagline,
+  href: `/projects/${p.slug}`,
+}));
+
+const writingEntries: PaletteEntry[] = articles.map((a) => ({
+  id: `article-${a.slug}`,
+  group: 'Writing',
+  title: a.title,
+  subtitle: a.description,
+  href: `/writing/${a.slug}`,
+}));
+
+const speakingEntries: PaletteEntry[] = talks.map((t) => ({
+  id: `talk-${t.slug}`,
+  group: 'Speaking',
+  title: t.title,
+  subtitle: t.event,
+  href: '/speaking',
+}));
+
+const actionEntries: PaletteEntry[] = [
+  { id: 'action-open-chat', group: 'Actions', title: strings.commandPalette.actions.openChat, actionId: 'open-chat' },
+  { id: 'action-book-a-call', group: 'Actions', title: strings.commandPalette.actions.bookACall, href: `${prefix}${bookACallHref}` },
+  { id: 'action-download-cv', group: 'Actions', title: strings.commandPalette.actions.downloadCv, href: `${prefix}/experience/dossier` },
+  { id: 'action-toggle-theme', group: 'Actions', title: strings.commandPalette.actions.toggleTheme, actionId: 'toggle-theme' },
+  { id: 'action-a11y', group: 'Actions', title: strings.commandPalette.actions.a11yOptions, actionId: 'a11y-panel' },
+  { id: 'action-copy-email', group: 'Actions', title: `${strings.commandPalette.actions.copyEmail} (${siteConfig.contactEmail})`, actionId: 'copy-email' },
+];
+
+const entries: PaletteEntry[] = [
+  ...pageEntries,
+  ...projectEntries,
+  ...writingEntries,
+  ...speakingEntries,
+  ...actionEntries,
+];
+---
+
+<CommandPalette entries={entries} strings={strings.commandPalette} contactEmail={siteConfig.contactEmail} client:idle />

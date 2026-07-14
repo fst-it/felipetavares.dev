@@ -1,0 +1,228 @@
+{
+  "site": {
+    "positioning": {
+      "statement": "Felipe Tavares is a senior enterprise and business architecture leader with 18 years across trading, banking, consulting and manufacturing industries. The consistent thread: translating complex trade and operational processes into defensible target architectures, and, increasingly, turning AI and data strategy into measurable business value. He leads in a global matrix and has moved architecture from gatekeeping to orchestrator and hands-on delivery."
+    },
+    "hero": {
+      "headline": "Enterprise architecture and AI strategy, built to survive contact with the real business.",
+      "slogan": "Architecting AI ambition into enterprise reality.",
+      "subhead": "18 years turning Architecture, AI, Data, Platform Engineering and Product Management strategies into shipped value.",
+      "primaryCtaLabel": "See the full story",
+      "primaryCtaHref": "/experience",
+      "secondaryCtaLabel": "Book a call",
+      "secondaryCtaHref": "/contact"
+    },
+    "skillDomains": [
+      {
+        "name": "AI & Agentic Engineering",
+        "shortLabel": "AI & Agentic",
+        "blurb": "Built the business case for 8-figure AI and data value in commodity trading, shipping AI-augmented architecture platforms hands-on.",
+        "weight": 13
+      },
+      {
+        "name": "Enterprise & Business Architecture",
+        "shortLabel": "Enterprise Arch",
+        "blurb": "Leads a central architecture function: authored the Architecture Guiding Principles and architect behaviour model across a federated global org.",
+        "weight": 12
+      },
+      {
+        "name": "Data Architecture & Engineering",
+        "shortLabel": "Data Arch & Eng",
+        "blurb": "Architected the future-state of an 8-figure enterprise data platform (lakehouse, streaming, API-first), now underpinning trading domains.",
+        "weight": 11
+      },
+      {
+        "name": "Cloud & Platform Architecture",
+        "shortLabel": "Cloud & Platform",
+        "blurb": "Drives a Platform-as-a-Product operating model on AWS: golden paths, IaC and Policy as Code, a Terraform pipeline catalogue.",
+        "weight": 10
+      },
+      {
+        "name": "Integration Architecture",
+        "shortLabel": "Integration",
+        "blurb": "Defined the enterprise future-state event-driven, API-led integration architecture and leads its adoption across global trading programs.",
+        "weight": 9
+      },
+      {
+        "name": "Digital Strategy & IT Strategy",
+        "shortLabel": "Digital Strategy",
+        "blurb": "Sets technology strategy for complex, regulated domains, including a multi-vendor buy-versus-build assessment for commodity trading systems.",
+        "weight": 8
+      },
+      {
+        "name": "Data Management & Analytics",
+        "shortLabel": "Data & Analytics",
+        "blurb": "Delivered data products credited with a double-digit-million revenue uplift, plus multi-million-dollar cost reductions across the product-data estate.",
+        "weight": 7
+      },
+      {
+        "name": "Software & Agentic Engineering",
+        "shortLabel": "Software Eng",
+        "blurb": "Builds hands-on: an in-house AI-augmented architecture platform that auto-assembles context for delivery teams and AI coding assistants.",
+        "weight": 6
+      },
+      {
+        "name": "SAP Delivery, Strategy & Architecture",
+        "shortLabel": "SAP Delivery",
+        "blurb": "Led SAP S/4HANA business architecture and order-to-cash transformations, cutting the cost of a heavily customized system by half.",
+        "weight": 5
+      },
+      {
+        "name": "Portfolio & Program Management",
+        "shortLabel": "Portfolio & Prog",
+        "blurb": "Management-team member on a 9-figure cloud migration program, with functional direction across a large architecture and engineering organization.",
+        "weight": 4
+      },
+      {
+        "name": "Product Management & Agile Delivery",
+        "shortLabel": "Product & Agile",
+        "blurb": "SCRUM and SAFe practitioner, CSPO and CSM certified. Brought agile delivery discipline to ERP/treasury and architecture operating models.",
+        "weight": 4
+      },
+      {
+        "name": "Technology Leadership & Org Design",
+        "shortLabel": "Tech Leadership",
+        "blurb": "Directly led multiple engineering, architecture and product teams, each with its own lead, and hundreds more through a federated, matrix operating model.",
+        "weight": 4
+      }
+    ],
+    "credibility": {
+      "statements": [
+        "Directly led multiple engineering, architecture and product teams, each with its own lead",
+        "Led hundreds of people across teams through a matrix operating model",
+        "18 years across trading, banking, consulting and manufacturing industries",
+        "Moved architecture from gatekeeping to orchestrator and hands-on delivery"
+      ]
+    },
+    "intentChips": [
+      { "label": "Ways to work together", "href": "/contact#ways-to-work-together" },
+      { "label": "Deep technical dives", "href": "/projects" },
+      { "label": "Booking a speaker?", "href": "/speaking" }
+    ],
+    "waysToWorkTogether": {
+      "eyebrow": "Beyond the day job",
+      "heading": "Ways to work together",
+      "cards": [
+        {
+          "title": "Mentoring",
+          "body": "I mentor engineers and architects working through those exact questions: how to structure a system, how to grow into the next role.",
+          "topic": "Advisory"
+        },
+        {
+          "title": "Advisory conversations",
+          "body": "I sit on internal architecture and governance boards, and advise founders building in adjacent spaces. If you want a second opinion on a target architecture or an early AI bet, that's the conversation.",
+          "topic": "Advisory"
+        },
+        {
+          "title": "Speaking & panels",
+          "body": "I speak on architecture, AI strategy, and technology leadership at conferences, panels, and in education settings. Specifics, not slideware.",
+          "topic": "Speaking"
+        }
+      ]
+    },
+    "socialLinks": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/in/felipetavares/",
+        "icon": "linkedin"
+      },
+      {
+        "label": "GitHub",
+        "url": "https://github.com/fst-it",
+        "icon": "github"
+      },
+      {
+        "label": "Substack",
+        "url": "https://fstit.substack.com",
+        "icon": "rss"
+      }
+    ],
+    "dossier": {
+      "summary": "Sr. Principal Architect Leader with 18 years across trading, banking, consulting and manufacturing industries. Director-level enterprise-architecture leadership, leading a central architecture function with functional direction over a large architecture and engineering organization (typically ≈10 direct, 20+ dotted-line). Leads enterprise and business architecture, AI, and data strategy across a global Fortune 500 organization's Agriculture and Trading and Data and Integration portfolios, including enterprise CTRM strategy. Built the business case attributing 8-figure value to AI and data initiatives, and architected the future-state of an 8-figure enterprise data platform. Moves architecture from gatekeeping to orchestrator and hands-on delivery.",
+      "competencyMatrix": [
+        {
+          "domain": "Enterprise & Business Architecture",
+          "depth": 5,
+          "evidence": "Architecture Guiding Principles, architect behaviour model, and global architecture governance process across a federated organization."
+        },
+        {
+          "domain": "Integration Architecture",
+          "depth": 5,
+          "evidence": "Defined the enterprise future-state event-driven, API-led integration architecture and leads its adoption across global trading programs."
+        },
+        {
+          "domain": "AI & Agentic Engineering",
+          "depth": 4,
+          "evidence": "8-figure AI/data value business case; built an in-house AI-augmented architecture platform (event-driven, CQRS, hexagonal) hands-on."
+        },
+        {
+          "domain": "Data Architecture & Engineering",
+          "depth": 4,
+          "evidence": "Architected the future-state of an 8-figure enterprise data platform (lakehouse, streaming, API-first consumption), plus MDM/data governance architecture."
+        },
+        {
+          "domain": "Cloud & Platform Architecture",
+          "depth": 4,
+          "evidence": "Drives a Platform-as-a-Product operating model on AWS: golden paths, IaC and Policy as Code, a Terraform pipeline catalogue."
+        },
+        {
+          "domain": "Digital Strategy & IT Strategy",
+          "depth": 4,
+          "evidence": "Multi-vendor buy-versus-build assessment and hybrid target architecture for global commodity trading systems; commodities technology strategy and roadmap."
+        },
+        {
+          "domain": "Data Management & Analytics",
+          "depth": 4,
+          "evidence": "Delivered data products credited with a double-digit-million revenue uplift, plus multi-million-dollar cost reductions across the product-data estate."
+        },
+        {
+          "domain": "Software & Agentic Engineering",
+          "depth": 4,
+          "evidence": "Builds hands-on: an in-house AI-augmented architecture platform that auto-assembles a queryable context layer for delivery teams and AI coding assistants."
+        },
+        {
+          "domain": "SAP Delivery, Strategy & Architecture",
+          "depth": 4,
+          "evidence": "Led SAP S/4HANA business architecture and order-to-cash transformations, including a rollout that cut maintenance cost of a customized system by more than half."
+        },
+        {
+          "domain": "Portfolio & Program Management",
+          "depth": 4,
+          "evidence": "Management-team member on a 9-figure cloud migration program; functional direction across a large architecture and engineering organization spanning trading, integration, and data."
+        },
+        {
+          "domain": "Product Management & Agile Delivery",
+          "depth": 4,
+          "evidence": "CSPO & CSM certified; SCRUM/SAFe delivery leadership."
+        },
+        {
+          "domain": "Technology Leadership & Org Design",
+          "depth": 4,
+          "evidence": "Directly led multiple engineering, architecture and product teams, each with its own lead, and hundreds of people across teams through a matrix operating model."
+        }
+      ],
+      "education": [
+        {
+          "degree": "MSc Information Systems Management",
+          "school": "University of Lisbon"
+        },
+        {
+          "degree": "BSc Information Systems",
+          "school": "Universidade Federal do Estado do Rio de Janeiro (UNIRIO)"
+        }
+      ],
+      "certifications": [
+        "Certified Scrum Product Owner (CSPO)",
+        "Certified ScrumMaster (CSM)",
+        "SAP Application Professional",
+        "TOGAF, in progress (planned Dec 2026)"
+      ],
+      "languages": [
+        { "name": "English", "level": "Fluent" },
+        { "name": "Portuguese", "level": "Native" },
+        { "name": "Spanish", "level": "Intermediate" },
+        { "name": "French", "level": "Beginner" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,54 @@
+---
+/**
+ * Standard layout primitive (V3 addendum: layout alignment audit). One content-width scale and
+ * one vertical-padding scale, so sections read consistently across pages instead of each page
+ * hand-rolling its own `max-w-*`/`py-*` combination.
+ *
+ * Width scale:
+ *   - "wide"   (max-w-6xl) — grids, cards, bento layouts. The dominant width already in use
+ *     across Home sections, Projects, Writing, Speaking.
+ *   - "narrow" (max-w-4xl) — prose and single-column reading content (dossier, article body).
+ *
+ * Padding scale:
+ *   - "hero"    — top-of-page sections: pb-11 pt-11 sm:pt-16 (reduced ~⅓ from original pb/pt-16
+ *     sm:pt-24 to tighten vertical rhythm site-wide).
+ *   - "first"   — first body section immediately after a hero: pt-11 sm:pt-16 pb-11 sm:pb-16.
+ *     The top padding mirrors the hero's bottom padding so the eyebrow/heading sits clearly below
+ *     the hero's gradient boundary with balanced breathing room. Use this on the first content
+ *     section of every interior page that has a hero (contact, writing, projects, speaking,
+ *     engineering). Pages using raw <section> tags rather than this primitive add the matching
+ *     class `pt-11 sm:pt-16` directly — both approaches express the same spacing token.
+ *   - "default" — subsequent body sections: pb-11 sm:pb-16, no top padding (sections stack
+ *     directly under the section above).
+ */
+export interface Props {
+  width?: 'wide' | 'narrow';
+  padding?: 'hero' | 'first' | 'default';
+  as?: 'section' | 'div';
+  class?: string;
+  id?: string;
+  'aria-labelledby'?: string;
+  'aria-label'?: string;
+}
+
+const {
+  width = 'wide',
+  padding = 'default',
+  as: Tag = 'section',
+  class: className = '',
+  id,
+  ...rest
+} = Astro.props;
+
+const widthClass = width === 'narrow' ? 'max-w-4xl' : 'max-w-6xl';
+const paddingClass =
+  padding === 'hero'  ? 'pb-11 pt-11 sm:pt-16' :
+  padding === 'first' ? 'pt-11 sm:pt-16 pb-11 sm:pb-16' :
+  'pb-11 sm:pb-16';
+---
+
+<Tag class={`px-4 ${paddingClass} ${className}`.trim()} id={id} {...rest}>
+  <div class={`mx-auto ${widthClass}`}>
+    <slot />
+  </div>
+</Tag>

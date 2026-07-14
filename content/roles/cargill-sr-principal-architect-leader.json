@@ -1,0 +1,60 @@
+{
+  "org": "Cargill",
+  "title": "Sr. Principal Architect Leader",
+  "start": "2023-06",
+  "location": "Amsterdam, NL",
+  "arc": "Setting the enterprise architecture direction for Agriculture & Trading — AI capabilities, Platform-as-a-Product, and global integration",
+  "arcPt": "Definindo a direção de arquitetura corporativa para Agriculture & Trading — capacidades de IA, Platform-as-a-Product e integração global",
+  "impact": [
+    {
+      "metric": "AI & GenAI",
+      "narrative": "Anchors the enterprise AI and GenAI capabilities for Agriculture & Trading — from agentic engineering patterns to a GenAI productivity capability for the front-office research workflow.",
+      "narrativePt": "Ancora as capacidades de IA e GenAI corporativa para Agriculture & Trading — de padrões de engenharia agêntica a uma capacidade de produtividade GenAI para o fluxo de pesquisa do front-office."
+    },
+    {
+      "metric": "Future State Strategy",
+      "narrative": "Delivered the Future State Strategy for Data and Integration, establishing the architecture direction for a Platform-as-a-Product data estate across a highly matrixed, federated organization.",
+      "narrativePt": "Entregou a Future State Strategy para Dados e Integração, estabelecendo a direção de arquitetura para um portfólio de dados Platform-as-a-Product em uma organização altamente matricial e federada."
+    },
+    {
+      "metric": "Functional direction",
+      "narrative": "Functional direction across a large, federated architecture and engineering organization spanning trading, integration, and data — Enterprise Architecture as the connective tissue for the Agriculture & Trading business.",
+      "narrativePt": "Direção funcional sobre uma grande organização federada de arquitetura e engenharia abrangendo trading, integração e dados — Arquitetura Corporativa como elo entre as áreas do negócio de Agriculture & Trading."
+    }
+  ],
+  "domains": [
+    "AI & Agentic Engineering",
+    "Enterprise & Business Architecture",
+    "Data Architecture & Engineering",
+    "Cloud & Platform Architecture",
+    "Integration Architecture"
+  ],
+  "order": 1,
+  "technologies": [],
+  "techCategories": [
+    {
+      "label": "AI & Agentic",
+      "items": ["Claude", "OpenAI", "Pinecone", "Abacus.AI", "TrueFoundry", "Agentic Engineering"]
+    },
+    {
+      "label": "Data Platform",
+      "items": ["Snowflake", "AWS Lakehouse", "dbt", "Spark", "Atlan Catalog", "Data Contracts", "Aurora PostgreSQL", "Neptune"]
+    },
+    {
+      "label": "Integration & Events",
+      "items": ["Confluent Cloud", "Apache Flink", "AWS SQS", "Solace", "Boomi", "API Management", "Event-driven architecture"]
+    },
+    {
+      "label": "Enterprise Applications",
+      "items": ["SAP S/4HANA", "SAP BTP", "ServiceNow"]
+    },
+    {
+      "label": "Cloud & Infrastructure",
+      "items": ["AWS", "Terraform", "Kubernetes"]
+    },
+    {
+      "label": "Architecture Patterns",
+      "items": ["Hexagonal Architecture", "CQRS"]
+    }
+  ]
+}

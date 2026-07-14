@@ -1,0 +1,242 @@
+---
+/**
+ * TODO (addendum V2b, "Flip card->page transitions"): evaluated layering GSAP Flip over Astro
+ * view transitions for project card -> deep-dive hero morph. Decision: skip for now. Astro's
+ * `<ClientRouter />` isn't wired up anywhere on the site yet — adopting it sitewide to get
+ * `::view-transition` morph here would turn every navigation into SPA-style routing, which
+ * changes script re-execution semantics for Lenis, GSAP ScrollTrigger contexts, and ChatWidget's
+ * mount lifecycle sitewide. That's a bigger, riskier change than "polish" for one card->hero
+ * transition, and Flip alongside a second, uncoordinated transition system risks exactly the
+ * fighting-animations failure mode the brief calls out. Revisit once view-transitions are
+ * deliberately adopted site-wide (own spec/commit), not bolted on here.
+ */
+import { getCollection, getEntry, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TableOfContents from '../../components/astro/TableOfContents.astro';
+import NumberTicker from '../../components/islands/NumberTicker';
+import BreadcrumbList from '../../components/astro/BreadcrumbList.astro';
+import Section from '../../components/astro/Section.astro';
+import ProjectDeepDiveCards from '../../components/astro/ProjectDeepDiveCards.astro';
+import { contentRepository, siteConfig } from '../../config/site';
+import Callout from '../../components/astro/Callout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('projects');
+  return entries.map((entry) => ({ params: { slug: entry.id } }));
+}
+
+const { slug } = Astro.params;
+const entry = await getEntry('projects', slug!);
+
+if (!entry) {
+  return Astro.redirect('/projects');
+}
+
+const { Content, headings } = await render(entry);
+const project = (await contentRepository.getProject(slug!))!;
+const allProjects = await contentRepository.getProjects();
+const related = allProjects.filter((p) => p.slug !== project.slug).slice(0, 2);
+
+const statusLabel: Record<string, string> = {
+  active: 'Active',
+  archived: 'Archived',
+  incubating: 'Incubating',
+};
+
+const pageTitle = project.title;
+const pageDescription = project.tagline;
+const canonical = `${siteConfig.url}/projects/${project.slug}`;
+
+// JSON-LD SoftwareSourceCode for the Selfwright deep-dive (spec section 10) — only emitted
+// when a repoUrl exists, since that's the schema's canonical identifying property.
+const jsonLd = project.repoUrl
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareSourceCode',
+      name: project.title,
+      description: project.tagline,
+      codeRepository: project.repoUrl,
+      author: {
+        '@type': 'Person',
+        name: siteConfig.name,
+        url: siteConfig.url,
+      },
+      programmingLanguage: project.stack,
+    }
+  : null;
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} canonical={canonical} markdownTwin={`/projects/${project.slug}.md`}>
+  {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />}
+  <BreadcrumbList crumbs={[
+    { name: 'Home', url: siteConfig.url },
+    { name: 'Projects', url: `${siteConfig.url}/projects` },
+    { name: project.title, url: canonical },
+  ]} />
+
+  <section class="relative overflow-hidden px-4 pb-11 pt-11 sm:pt-16" aria-labelledby="project-heading">
+    <div class="gradient-mesh" aria-hidden="true">
+      <div class="mesh-blob"></div>
+    </div>
+
+    <div class="relative z-10 mx-auto max-w-4xl">
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="rounded-full bg-[var(--surface-glass-strong)] px-3 py-1 font-mono text-xs uppercase tracking-wide text-[var(--accent)]">
+          {statusLabel[project.status]}
+        </span>
+        <span class="text-sm text-muted">{project.roleLine}</span>
+      </div>
+      <h1 id="project-heading" class="mt-4 text-balance">{project.title}</h1>
+      <p class="mt-4 max-w-2xl text-lg text-muted">{project.tagline}</p>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        {project.repoUrl && (
+          <a
+            href={project.repoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="border-beam rounded-[var(--radius-sm)] bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent-contrast)] btn-interactive"
+          >
+            View repository
+          </a>
+        )}
+        {project.liveUrl && (
+          <a
+            href={project.liveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="glass rounded-[var(--radius-sm)] px-5 py-2.5 text-sm font-semibold text-[var(--text)] btn-interactive"
+          >
+            View live
+          </a>
+        )}
+      </div>
+
+      {project.metrics.length > 0 && (
+        <dl class="mt-10 grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-3">
+          {project.metrics.map((metric) => (
+            <div class="glass flex h-full flex-col justify-between rounded-[var(--radius-md)] p-5">
+              <dt class="text-xs text-muted">{metric.label}</dt>
+              <dd class="mt-1 font-mono text-lg font-semibold text-[var(--text)]">
+                <NumberTicker client:visible value={metric.value} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {project.stack.length > 0 && (
+        <ul class="mt-6 flex flex-wrap gap-2">
+          {project.stack.map((tech) => (
+            <li class="rounded-full bg-[var(--surface-glass-strong)] px-3 py-1 text-xs text-muted">
+              {tech}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {project.deepDive && <ProjectDeepDiveCards deepDive={project.deepDive} />}
+    </div>
+  </section>
+
+  <section class="px-4 pb-11 sm:pb-16">
+    <div class="mx-auto grid max-w-5xl grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_240px]">
+      <article class="container-prose prose-project">
+        <Content components={{ Callout }} />
+      </article>
+
+      <aside class="hidden lg:block">
+        <div class="sticky top-24">
+          <TableOfContents headings={headings} />
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  {
+    related.length > 0 && (
+      <Section aria-labelledby="related-heading">
+        <h2 id="related-heading" class="font-display text-xl">
+          More projects
+        </h2>
+        <div class="mt-6 grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2">
+          {related.map((p) => (
+            <a
+              href={`/projects/${p.slug}`}
+              data-card-motion
+              class="glass flex h-full flex-col justify-between rounded-[var(--radius-md)] p-6 transition-transform duration-200 hover:-translate-y-1"
+            >
+              <div>
+                <h3 class="font-display text-lg font-semibold text-[var(--text)]">{p.title}</h3>
+                <p class="mt-2 text-sm text-muted">{p.tagline}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </Section>
+    )
+  }
+</BaseLayout>
+
+<style>
+  /* Typographic prose styling for the MDX deep-dive body (spec section 7). */
+  .prose-project :global(h2) {
+    margin-top: 2.5rem;
+    font-size: var(--font-size-h3);
+  }
+
+  .prose-project :global(h3) {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+  }
+
+  .prose-project :global(p) {
+    margin-top: 1rem;
+    color: var(--text-muted);
+  }
+
+  .prose-project :global(ul),
+  .prose-project :global(ol) {
+    margin-top: 1rem;
+    padding-left: 1.25rem;
+    color: var(--text-muted);
+  }
+
+  .prose-project :global(li) {
+    margin-top: 0.5rem;
+  }
+
+  .prose-project :global(li)::marker {
+    color: var(--accent);
+  }
+
+  .prose-project :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .prose-project :global(code) {
+    background: var(--surface-glass-strong);
+    padding: 0.15em 0.4em;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+
+  .prose-project :global(pre) {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+  }
+
+  .prose-project :global(pre code) {
+    background: none;
+    padding: 0;
+  }
+
+  .prose-project :global(img) {
+    margin-top: 1.5rem;
+    border-radius: var(--radius-md);
+  }
+</style>

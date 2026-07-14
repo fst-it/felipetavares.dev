@@ -1,0 +1,120 @@
+{
+  "engineering": {
+    "decisions": [
+      {
+        "title": "Astro over Next.js",
+        "context": "The site is mostly static, SEO-critical content read by recruiters and peers on commutes, not an app that needs client-side routing state.",
+        "decision": "Astro 5 with React islands only where interactivity is real (chat, forms, theme toggle), instead of Next.js.",
+        "cost": "Gave up Next's larger ecosystem and app-router conveniences. Bought near-zero client JS on every content page by default — a budget Next would need deliberate work to hit, since its defaults ship a client-first runtime whether a page needs one or not."
+      },
+      {
+        "title": "Git-based CMS over a hosted one",
+        "context": "No evidence yet that a plain git-plus-editor workflow can't keep up with actual publishing cadence, before paying for a hosted CMS to solve a problem that might not exist.",
+        "decision": "Content lives as git-versioned MDX/JSON, read through one ContentRepository port, edited three equivalent ways — direct file, Claude Code, or a local Keystatic UI.",
+        "cost": "Gave up a hosted UI's polish and multi-editor collaboration. Bought a $0 CMS with the swap to Sanity or Payload staying a single new adapter file, not a page-level rewrite, if the workflow ever does hit a ceiling."
+      },
+      {
+        "title": "Workers AI first, Anthropic as fallback",
+        "context": "The chatbot needs a model provider, and a paid API as the default breaks the $0/month budget the moment the site gets any real traffic.",
+        "decision": "A provider router tries Cloudflare Workers AI first, free and colocated with the rest of the stack, and falls back to Anthropic only if that call errors — never the other way around.",
+        "cost": "Workers AI quality trails frontier models on nuanced questions. The tradeoff: a chatbot that costs nothing at normal traffic, with the upgrade to Claude Haiku sitting behind one config change in src/config/llm.ts, not a rewrite."
+      },
+      {
+        "title": "Cloudflare's free tier as the ceiling, not a starting point",
+        "context": "Domain already owned; every other cost (hosting, embeddings, rate-limit storage, email) had to fit inside a tier that won't get bumped by a personal site's real traffic, not just look cheap on a demo.",
+        "decision": "Pages/Workers for hosting, KV for rate limiting, Vectorize for embeddings, Workers AI for the chatbot — one provider, one free tier, for everything that isn't the domain itself.",
+        "cost": "Gave up a multi-vendor stack that might optimize any one piece slightly better. Bought a $0/month recurring bill regardless of how many features get added, because they all share the same headroom instead of each adding its own bill."
+      },
+      {
+        "title": "The hero moved from decorative to data-true",
+        "context": "An early hero concept was a generic animated gradient mesh with an optional pointer-parallax dot grid: motion for its own sake, no connection to what the site is actually about.",
+        "decision": "Replaced it with a living-blueprint diagram generated at build time from the real competency matrix — nodes are skill domains weighted by real depth, edges are roles that touched them. Not decorative randomness.",
+        "cost": "More build complexity than a static gradient. The hero now changes only when the underlying career data changes — the diagram is a claim about real experience, not a mood board."
+      },
+      {
+        "title": "A hand-written fetch transport over the MCP SDK's own",
+        "context": "The MCP server's Cloudflare Worker transport needed to implement the protocol's Transport interface, and the SDK ships one, StreamableHTTPServerTransport, for exactly this.",
+        "decision": "Traced that class into node_modules and found it's typed and implemented directly against Node's IncomingMessage/ServerResponse, which don't exist in the Workers runtime. Wrote FetchTransport instead: the same interface, implemented directly over the standard Fetch API.",
+        "cost": "Gave up the SDK's official, more-tested transport implementation. Bought a Worker that actually runs, verified with a real `wrangler dev` handshake, instead of one that fails at runtime reaching for a Node built-in that isn't there."
+      }
+    ],
+    "stack": [
+      { "name": "Astro 5", "reason": "Islands architecture ships near-zero client JS on static content by default." },
+      { "name": "React (islands only)", "reason": "Used only where a component genuinely needs client-side state — chat, forms, toggles." },
+      { "name": "TypeScript, hexagonal ports & adapters", "reason": "core stays framework-free; swapping an adapter never touches a page." },
+      { "name": "Tailwind CSS v4", "reason": "Token-driven styling; every color and spacing value traces to one CSS custom-property file." },
+      { "name": "Cloudflare Pages + Workers", "reason": "Hybrid output: pages prerender to the CDN, /api/* runs as Workers functions." },
+      { "name": "Cloudflare Workers AI + Vectorize", "reason": "Free-tier chatbot provider and embedding index, with Anthropic as a config-swappable fallback." },
+      { "name": "Cloudflare KV", "reason": "Rate-limit storage for /api/contact and /api/chat, free tier, no separate database." },
+      { "name": "Resend", "reason": "Contact form email delivery via the REST API; the RESEND_API_KEY env binding keeps it out of the bundle." },
+      { "name": "Cloudflare Turnstile", "reason": "Server-side bot verification on /api/contact; sitekey is public, secret stays in the Worker env binding." },
+      { "name": "Astro content collections (git-based CMS)", "reason": "content/ is the CMS — MDX/JSON, versioned in git, edited three equivalent ways." },
+      { "name": "Keystatic", "reason": "Local content-editing UI mirroring the same zod schemas Astro's collections already validate." },
+      { "name": "GSAP, Lenis, OGL (motion stack)", "reason": "MIT-licensed; loaded lazily per page so content pages never pay for motion they don't use." },
+      { "name": "Model Context Protocol (packages/mcp)", "reason": "Publishes the same content and chatbot to AI agents as typed tools, not scraped HTML." },
+      { "name": "Vitest + Playwright", "reason": "Vitest for unit and architecture boundary tests; Playwright for cross-engine E2E across Chromium, WebKit, and mobile-WebKit." }
+    ],
+    "changelog": [
+      {
+        "date": "2026-07-04",
+        "title": "Experience and career narrative published",
+        "detail": "Scroll-driven career timeline and printable executive dossier go live, covering seven roles.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-05",
+        "title": "Projects, writing engine, and chatbot launch",
+        "detail": "Project deep-dives, an RSS-backed writing engine with per-article publish kits, and a RAG chatbot built on Cloudflare Workers AI ship in one push.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-05",
+        "title": "Accessibility controls added",
+        "detail": "A floating panel ships with reduce-motion, high-contrast, and larger-text toggles, backed by a published accessibility statement.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-05",
+        "title": "AI-readable surfaces ship",
+        "detail": "Markdown twins for every page, an llms.txt file, and a JSON Resume endpoint go live. An AI agent can read this site cleanly without scraping HTML.",
+        "type": "content"
+      },
+      {
+        "date": "2026-07-06",
+        "title": "MCP server live at mcp.felipetavares.dev",
+        "detail": "Career data and the chatbot are exposed as typed Model Context Protocol tools. Any MCP-capable agent can query roles, search articles, or start a grounded chat.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-09",
+        "title": "Brand identity and galaxy backdrop ship",
+        "detail": "The owner's brand glyph replaces placeholder marks across favicon, OG image, and chat launcher. A WebGL galaxy layer sits behind all page content, tuned for light and dark themes.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-09",
+        "title": "/reading section opens",
+        "detail": "A public log of books, articles, and papers, each with a verdict and rationale. Filterable by type and domain, with four verdict levels.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-10",
+        "title": "Site deployed to Cloudflare Pages at $0/month",
+        "detail": "The full stack (Pages, Workers, KV, Vectorize, Workers AI) runs inside Cloudflare's free tier. Total recurring cost after the domain: $0/month.",
+        "type": "feature"
+      },
+      {
+        "date": "2026-07-11",
+        "title": "Structured data and SEO pass",
+        "detail": "Person, WebSite, ProfilePage, and Article JSON-LD added across all main pages. Desktop Lighthouse scores after the pass: 100/100/100/100.",
+        "type": "content"
+      },
+      {
+        "date": "2026-07-11",
+        "title": "Agent-discovery endpoints added",
+        "detail": "A well-known API catalog, an MCP server card, and HTTP Link headers on the homepage let AI agents find the site's machine-readable surfaces without guessing paths.",
+        "type": "feature"
+      }
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "capturedAt": "2026-07-14",
+  "groups": [
+    {
+      "title": "Eval-suite pass rate — fitness functions",
+      "metrics": [
+        {
+          "label": "Tier-1 checks (CI-safe, no private data)",
+          "value": "28 passed · 0 failed"
+        },
+        {
+          "label": "Tier-2 checks (need local truth-layer data)",
+          "value": "5 skipped"
+        }
+      ],
+      "source": "Selfwright `pnpm fitness` @ 78b2542"
+    },
+    {
+      "title": "Eval-suite pass rate — deterministic-core unit tests",
+      "metrics": [
+        {
+          "label": "Tests passed",
+          "value": "822 / 822 across 42 files"
+        }
+      ],
+      "source": "Selfwright `pnpm --filter @selfwright/core test` @ 78b2542"
+    },
+    {
+      "title": "Runtime/cost — deterministic vs. LLM tier",
+      "metrics": [
+        {
+          "label": "Deterministic tier (ATS, scoring, tailoring, fitness)",
+          "value": "$0 — no LLM call"
+        },
+        {
+          "label": "LLM tier (cover/research, co-piloted)",
+          "value": "$0 metered — subscription-based, no per-call API billing (ADR 0006)"
+        }
+      ],
+      "source": "Selfwright docs/metrics.md"
+    }
+  ]
+}

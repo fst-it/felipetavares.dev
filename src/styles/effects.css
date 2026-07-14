@@ -1,0 +1,778 @@
+/*
+ * "Liquid Glass" visual language — spec 6.3.
+ * GPU-cheap, progressive enhancement, prefers-reduced-motion honored throughout.
+ *
+ * Wrapped in `@layer components` so these classes sit in the same cascade layer as Tailwind's
+ * component layer — otherwise, being unlayered, they'd unconditionally win over Tailwind's
+ * layered utility classes (e.g. `.glass`'s `position: relative` was beating `.fixed`'s
+ * `position: fixed` on the chat launcher regardless of source order or specificity).
+ */
+@layer components {
+
+/* Tileable noise via inline SVG feTurbulence data-URI (no binary asset needed). */
+:root {
+  --noise-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Glass surface: blur + saturate, 4% fill, specular top edge, noise overlay. */
+.glass {
+  position: relative;
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-ambient);
+  isolation: isolate;
+}
+
+.glass::before {
+  /* 1px inner top-edge specular highlight */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(180deg, var(--specular), transparent 40%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.glass::after {
+  /* Subtle noise texture to kill gradient banding */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--noise-svg);
+  background-size: 128px 128px;
+  opacity: var(--noise-opacity);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.glass-strong {
+  background: var(--surface-glass-strong);
+}
+
+/*
+ * Overlay-surface utility (V5d C3a; raised ledger rows 93-95) — shared near-opaque background
+ * for floating overlays (MobileMenu, ChatWidget sheet, AccessibilityPanel, CommandPalette,
+ * DetailSheet panel, floating badge buttons) so they remain legible on WebKit/iOS where
+ * backdrop-filter: blur can render as fully transparent with certain compositing layer
+ * configurations. Overrides .glass's 4% surface-glass.
+ *
+ * Single token: --surface-header-scrolled (tokens.css) — dark 96%, light 97%.
+ * Both themes resolve automatically through the token; no separate html.theme-light override needed.
+ */
+.overlay-surface {
+  background: var(--surface-header-scrolled);
+}
+
+
+/* Gradient-accent surface (V5b C2 consumer fix). Pair with bg-[var(--accent)] for the solid
+   fallback. In gradient mode --accent-surface resolves to a linear-gradient, so background-image
+   picks it up and the gradient paints over the solid background-color. In blue/orange modes
+   --accent-surface resolves to a color value, which is NOT a valid background-image value;
+   the browser treats it as `none`, leaving bg-[var(--accent)] as the sole visible background.
+   Consumers must carry both bg-[var(--accent)] AND accent-bg-image. */
+.accent-bg-image {
+  background-image: var(--accent-surface, none);
+}
+
+/* Border-beam / shimmer: conic-gradient rotating border (Magic UI pattern). */
+@property --beam-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.border-beam {
+  position: relative;
+  border-radius: var(--radius-sm);
+  isolation: isolate;
+}
+
+.border-beam::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0%,
+    var(--accent) 8%,
+    var(--accent-2) 14%,
+    transparent 24%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: beam-rotate 3.5s linear infinite;
+  z-index: -1;
+}
+
+/* Gradient accent mode: sweep mixes --accent (blue) with --brand-warm (orange) to match CTAs. */
+:root[data-accent='gradient'] .border-beam::before,
+html.theme-dark[data-accent='gradient'] .border-beam::before,
+html.theme-light[data-accent='gradient'] .border-beam::before {
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0%,
+    var(--accent) 8%,
+    var(--brand-warm) 14%,
+    transparent 24%,
+    transparent 100%
+  );
+}
+
+@keyframes beam-rotate {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+
+/* Animated gradient-mesh hero background — transform-only, compositor thread. */
+.gradient-mesh {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gradient-mesh::before,
+.gradient-mesh::after,
+.gradient-mesh .mesh-blob {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: transform;
+}
+
+.gradient-mesh::before {
+  width: 42vw;
+  height: 42vw;
+  top: -10%;
+  left: -5%;
+  background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+  animation: mesh-drift-a 22s var(--ease-out) infinite alternate;
+}
+
+.gradient-mesh::after {
+  width: 36vw;
+  height: 36vw;
+  bottom: -15%;
+  right: -8%;
+  background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+  animation: mesh-drift-b 26s var(--ease-out) infinite alternate;
+}
+
+.gradient-mesh .mesh-blob {
+  width: 28vw;
+  height: 28vw;
+  top: 30%;
+  left: 40%;
+  background: radial-gradient(circle, var(--accent-2), transparent 70%);
+  opacity: 0.35;
+  animation: mesh-drift-c 30s var(--ease-out) infinite alternate;
+}
+
+/* Hero-scale backdrop variant (V3-polish commit 2: "give the light gradient-mesh/hero backdrop
+   real presence") — uses --accent-glow-strong so the hero's mesh reads with real weight rather
+   than the same faint wash every other page's section backdrop uses. Applies in both themes;
+   the effect is most noticeable in light, where the base --accent-glow was previously too faint
+   to register against the ivory surface. */
+.gradient-mesh-hero::before,
+.gradient-mesh-hero::after {
+  background: radial-gradient(circle, var(--accent-glow-strong), transparent 70%);
+}
+
+@keyframes mesh-drift-a {
+  to {
+    transform: translate(8vw, 6vh) scale(1.1);
+  }
+}
+
+@keyframes mesh-drift-b {
+  to {
+    transform: translate(-6vw, -8vh) scale(1.08);
+  }
+}
+
+@keyframes mesh-drift-c {
+  to {
+    transform: translate(4vw, -4vh) scale(0.95);
+  }
+}
+
+/* Kinetic-type gradient text clip (santifer-style color shift, this commit). Applied via a CSS
+   class so the clip works reliably: React 19 does not write WebkitBackgroundClip / backgroundClip
+   from inline-style CSSProperties objects (they're silently dropped). The backgroundImage,
+   WebkitTextFillColor, and color are still set via inline style since they vary per frame. */
+.kinetic-gradient-clip {
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Kinetic-type live caret (addendum section 3) — blinking bar next to the typed word. */
+.kinetic-caret {
+  display: inline-block;
+  width: 2px;
+  height: 0.9em;
+  margin-left: 2px;
+  background: currentColor;
+  vertical-align: text-bottom;
+  animation: caret-blink 1s step-end infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Kinetic-type verb wrapper (ledger row 101) — display:inline-block keeps the verb in the
+   natural inline text flow while providing a position:relative containing block for the
+   absolutely-positioned underline. vertical-align:baseline aligns the verb's text baseline
+   with the surrounding pronoun and noun text on the same line.
+   Previously this was handled by an inline-flex flex-col wrapper in KineticType.tsx, which
+   made the verb an indivisible block item that fragmented from the noun on line wrap. */
+.kinetic-verb-wrap {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+}
+
+/* Kinetic-type verb underline (V3 addendum: kinetic type curated pairing; updated ledger row 101)
+   — draws in beneath the louder verb slot as it finishes typing, scaleX-only (compositor thread).
+   Now uses position:absolute so the underline remains out of inline flow (no height contribution
+   to the line box), matching the visual placement of the old margin-top:0.15em in the flex-col.
+   bottom:-7px ≈ verb line-height + 0.15em gap (3.6–4.5px at text-2xl/text-3xl) — imperceptible
+   difference vs the old margin approach (verified at both mobile text-2xl and sm text-3xl). */
+.kinetic-verb-underline {
+  position: absolute;
+  bottom: -7px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* Scroll-progress thread (addendum section 1.3) — thin accent line tracking scroll depth.
+   Primary mechanism is CSS scroll-driven animation; the JS fallback (ScrollProgressThread.astro)
+   sets --scroll-progress directly for browsers without `animation-timeline: scroll()` support. */
+.scroll-thread {
+  position: fixed;
+  z-index: 50;
+  background: var(--accent);
+  box-shadow: 0 0 8px 0 var(--accent-glow);
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+.scroll-thread-vertical {
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100vh;
+  transform: scaleY(var(--scroll-progress, 0));
+}
+
+.scroll-thread-horizontal {
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 3px;
+  transform: scaleX(var(--scroll-progress, 0));
+}
+
+/* Left edge on desktop, top edge on mobile (spec addendum 1.3). */
+.scroll-thread-responsive {
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100vh;
+  transform: scaleY(var(--scroll-progress, 0));
+}
+
+@media (max-width: 640px) {
+  .scroll-thread-responsive {
+    width: 100vw;
+    height: 3px;
+    transform: scaleX(var(--scroll-progress, 0));
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-thread-auto.scroll-thread-vertical {
+    animation: thread-scale-y linear both;
+    animation-timeline: scroll(root);
+  }
+
+  .scroll-thread-auto.scroll-thread-horizontal {
+    animation: thread-scale-x linear both;
+    animation-timeline: scroll(root);
+  }
+
+  .scroll-thread-auto.scroll-thread-responsive {
+    animation: thread-scale-y linear both;
+    animation-timeline: scroll(root);
+  }
+
+  @media (max-width: 640px) {
+    .scroll-thread-auto.scroll-thread-responsive {
+      animation-name: thread-scale-x;
+    }
+  }
+}
+
+@keyframes thread-scale-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes thread-scale-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/*
+ * Scrolled-header surface (ledger row 90 — real fix; row 87's attempt failed in production).
+ *
+ * Root cause of the failed first attempt — two independent bugs:
+ *   (b) Wrong element targeted: `header[data-scrolled]` styled the outer <header> wrapper, which
+ *       is fully transparent (px-4 pt-4 padding, no background). The visible floating pill that
+ *       content scrolls behind is the INNER .glass <div>. Styling the outer element painted
+ *       nothing the user sees.
+ *   (c) Wrong token: --surface-glass is rgb(255 255 255 / 4%) in dark and rgb(20 23 31 / 4%) in
+ *       light — single-digit alpha. Even if the right element had been targeted the effect would
+ *       have been invisible. The JS listener and data-scrolled attribute itself worked correctly.
+ *
+ * Fix: target `header[data-scrolled] .glass` (the actual pill) and use --surface-header-scrolled
+ * (~88% dark / ~92% light, defined in tokens.css) instead of --surface-glass. Backdrop-filter is
+ * already on .glass; only background needs overriding. Transition lives on `header .glass` (not
+ * just the scrolled state) so the fade works in both scroll directions.
+ */
+header .glass {
+  transition:
+    background-color var(--duration-micro) var(--ease-out),
+    border-color var(--duration-micro) var(--ease-out);
+}
+
+header[data-scrolled] .glass {
+  background: var(--surface-header-scrolled);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  header .glass {
+    transition: none;
+  }
+}
+
+html[data-motion='off'] header .glass {
+  transition: none;
+}
+
+/* Blueprint hero diagram node links — invisible hit targets over the SVG geometry. */
+.blueprint-node-link {
+  border-radius: 9999px;
+}
+
+/* Blueprint node tooltip (V5a fix 1c) — small glass popover, portaled to document.body by
+   HeroBlueprint.tsx so it's never clipped by the SVG viewBox. z-index above the hero content but
+   below modal-class overlays (DetailSheet/CommandPalette sit at 40-60). */
+.blueprint-tooltip {
+  position: absolute;
+  z-index: 30;
+  max-width: 12rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Constellation labels — hidden at <768px via CSS so SSR HTML and hydrated React agree without a
+   re-render race (useSyncExternalStore fires async; CSS gate is instant). */
+@media (max-width: 767px) {
+  .hero-constellation-labels {
+    display: none;
+  }
+}
+
+/*
+ * Blueprint node/pulse color design (V3-polish commit 1 — "the result should read as a living
+ * multi-colored neural mind, not blue confetti"). Domain node dots carry a soft luminous glow in
+ * their own assigned accent (colorVar, set per-node by brand-mark-geometry.ts); satellites are
+ * slightly desaturated so the domain nodes still read as visually dominant. Traveling pulses
+ * (radial-gradient fill, see HeroBlueprint.tsx) get an outer blur glow so they read as luminous
+ * light rather than flat dots.
+ */
+.blueprint-node-dot {
+  filter: drop-shadow(0 0 1.5px currentColor) drop-shadow(0 0 3px var(--accent-glow));
+}
+
+.blueprint-node-satellite {
+  filter: saturate(0.55) brightness(0.9);
+}
+
+.blueprint-travel-dot {
+  filter: blur(0.15px) drop-shadow(0 0 2.5px currentColor);
+}
+
+/*
+ * Blueprint "mind" diagram theming (V3 addendum: hero mind rework; V3-polish commit 2: light-theme
+ * effects parity). Both themes should feel equally rich — dark = neon glow, light = vivid ink +
+ * soft luminosity — rather than light reading as a flattened, effect-less version of dark.
+ */
+html.theme-light .blueprint-svg .blueprint-edges {
+  /* Previously double-penalized: 0.15 stroke-width (already thinner than dark's 0.25) *and* 0.28
+     opacity (down from dark's 0.35) compounded into edges that were barely visible. Keep the
+     thinner stroke (light "ink" reads better thin) but raise opacity back up so lines don't
+     disappear against the ivory surface. */
+  stroke-width: 0.2;
+  opacity: 0.55;
+}
+
+html.theme-light .blueprint-svg .blueprint-node-dot {
+  /* Previously `filter: none` entirely stripped the dark theme's glow rather than tuning it —
+     light gets its own subtle glow (smaller blur radius, no oversized bloom) so nodes still read
+     as "lit" rather than flat filled circles. */
+  filter: drop-shadow(0 0 1px currentColor) drop-shadow(0 0 1.5px var(--accent-glow));
+}
+
+html.theme-light .blueprint-svg .blueprint-node-satellite {
+  opacity: 0.4;
+}
+
+/* Neural field (Tier 3) glow: dark uses `normal` blend at full presence (base rule, no override
+   needed here). Light previously used `multiply`, which crushes color against a light/white
+   background (multiply darkens everything, so vivid glow colors read as a muddy gray smear) —
+   switched to `normal` blend at a low-but-present opacity, paired with the deeply saturated
+   --glow-* tokens (see tokens.css) that NeuralField.tsx now reads, so the wash reads as genuine
+   color wash rather than "ink on blueprint" via darkening. */
+html.theme-light .blueprint-diagram > div[aria-hidden='true'] {
+  opacity: 0.18;
+  mix-blend-mode: normal;
+}
+
+/*
+ * Section-title reveals (addendum V2b) — src/lib/section-reveal.ts. `[data-reveal]` headings
+ * render fully visible by default (FOUC-safe: the script sets the animated FROM-state itself
+ * via gsap.set only once it's confirmed running). `.reveal-word` / `.reveal-underline` are
+ * created by that script, so their only job here is layout, not visibility.
+ */
+[data-reveal] {
+  position: relative;
+}
+
+.reveal-word {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+.reveal-underline {
+  display: block;
+  margin-top: 0.4em;
+  width: 3rem;
+  height: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 8px 0 var(--accent-glow);
+  transform: scaleX(0);
+}
+
+/* Gradient accent mode: section-title underline gets the blue→orange gradient. */
+:root[data-accent='gradient'] .reveal-underline,
+html.theme-dark[data-accent='gradient'] .reveal-underline,
+html.theme-light[data-accent='gradient'] .reveal-underline {
+  background: linear-gradient(90deg, var(--accent), var(--brand-warm));
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-underline {
+    display: none;
+  }
+}
+
+html[data-motion='off'] .reveal-underline {
+  display: none;
+}
+
+/*
+ * Card magnetics + spotlight (addendum V2b) — src/lib/card-motion.ts. The script sets
+ * --spotlight-x/-y on pointermove and toggles the .card-spotlight class; this is purely the
+ * radial-gradient overlay that reads those variables. No-op (no class added) on coarse pointers,
+ * touch, or motion-off — cards keep their existing plain hover styles in that case.
+ */
+.card-spotlight {
+  position: relative;
+  isolation: isolate;
+}
+
+.card-spotlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    /* Radius reduced ~37% from 240px (item 4, 2026-07-06 refinement: "too broad"). */
+    150px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
+    var(--accent-glow),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.card-spotlight:hover::after {
+  opacity: 1;
+}
+
+/*
+ * Motion rules: honor prefers-reduced-motion everywhere -> fall back to opacity-only.
+ * `html[data-motion="off"]` (src/lib/motion.ts) is the same kill-switch, set from
+ * prefers-reduced-motion at first paint but overridable via localStorage (V2c a11y panel) — so
+ * every rule here is duplicated onto that attribute selector rather than relying on the media
+ * query alone.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .border-beam::before {
+    animation: none;
+  }
+
+  .gradient-mesh::before,
+  .gradient-mesh::after,
+  .gradient-mesh .mesh-blob {
+    animation: none;
+  }
+
+  .kinetic-caret {
+    animation: none;
+    opacity: 0;
+  }
+
+  .scroll-thread {
+    display: none;
+  }
+
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+html[data-motion='off'] .border-beam::before {
+  animation: none;
+}
+
+html[data-motion='off'] .gradient-mesh::before,
+html[data-motion='off'] .gradient-mesh::after,
+html[data-motion='off'] .gradient-mesh .mesh-blob {
+  animation: none;
+}
+
+html[data-motion='off'] .kinetic-caret {
+  animation: none;
+  opacity: 0;
+}
+
+html[data-motion='off'] .scroll-thread {
+  display: none;
+}
+
+html[data-motion='off'] * {
+  scroll-behavior: auto !important;
+}
+
+} /* end @layer components */
+
+/*
+ * Global interactive-state utility (V3 addendum: global button reactivity; V3-polish commit 3:
+ * sophisticated button states). One shared class for every button/CTA's hover/active/disabled
+ * feedback, replacing ad-hoc `hover:scale-[1.02]` (and nothing for the pressed state) repeated
+ * across ~10 files.
+ *
+ * DELIBERATELY in `@layer utilities`, not `@layer components` (where it lived before): several
+ * call sites co-apply Tailwind's own `hover:text-*`/`transition-colors` utility classes on the
+ * SAME element (e.g. Header.astro's nav-search trigger, ThemeToggle.tsx). Tailwind v4's own
+ * utilities live in `@layer utilities`, which is declared AFTER `@layer components` in the
+ * cascade (see global.css: `@import 'tailwindcss'` establishes the layer order before this file's
+ * `@layer components` block ever runs) — so a `@layer components` rule's `transition` shorthand
+ * was being fully overwritten by `transition-colors`' `transition-property` list on any element
+ * carrying both classes, silently dropping `transform`/`filter`/`box-shadow` from the transition
+ * and making hover feel broken/instant rather than smooth (root cause of "no hover effect at all",
+ * verified live via computed-style diffing — `transition-property` on the affected buttons no
+ * longer listed `transform` at all before this fix). Living in `@layer utilities` instead gives
+ * `.btn-interactive` the SAME cascade precedence as Tailwind's own utilities, decided purely by
+ * source order within that shared layer (this file's import runs after Tailwind's, so it still
+ * wins) — structural immunity to this class of collision regardless of what utility classes a
+ * future call site adds alongside `btn-interactive`.
+ *
+ * Treatment:
+ *   - hover: lift (translateY(-1px) scale(1.02)) + accent glow bloom (box-shadow) + a top-edge
+ *     light-sheen sweep (::before pseudo-element gradient sweeping left-to-right, ~500ms).
+ *   - active/press: compresses (scale(0.97)), glow tightens (smaller spread, unchanged hue).
+ *   - focus-visible: untouched — each button owns its own ring, this utility never sets outline.
+ *   - disabled: dimmed, no hover/active transform or glow, default cursor.
+ *   - motion-off / reduced-motion: NO transform (including the sheen, which is a transform-driven
+ *     sweep) but CLEAR feedback remains — border color, background tint, and glow shift on
+ *     hover/press, so buttons always visibly react even with all motion suppressed.
+ *   - `transition` here is the FULL list this class needs (transform, filter, box-shadow,
+ *     border-color, background-color) — callers that also apply Tailwind's `transition-colors`
+ *     get a redundant but harmless second color transition; the ones that matter (Header.astro's
+ *     search trigger, Hero.astro's intent chips, ThemeToggle.tsx) keep their `hover:text-*`
+ *     color change working exactly as before, now just riding on `.btn-interactive`'s own
+ *     transition list instead of depending on `transition-colors` to survive the cascade.
+ */
+@layer utilities {
+
+/* Zero-specificity positioning default: the ::before sheen needs the BUTTON as its containing
+   block. Unpositioned call sites (the language pill and search trigger shipped exactly this bug —
+   their sheen resolved against the header and swept across it, the "drifts to the right" defect)
+   get `relative` from this; any call site carrying a positioning utility (.fixed on the chat
+   launcher / a11y badge) still wins, because :where() carries no specificity at all — so the
+   prior fixed-vs-relative cascade bug cannot recur through this rule. */
+:where(.btn-interactive) {
+  position: relative;
+}
+
+.btn-interactive {
+  isolation: isolate;
+  transition:
+    transform var(--duration-micro, 200ms) var(--ease-out, ease-out),
+    filter var(--duration-micro, 200ms) var(--ease-out, ease-out),
+    box-shadow var(--duration-micro, 200ms) var(--ease-out, ease-out),
+    border-color var(--duration-micro, 200ms) var(--ease-out, ease-out),
+    background-color var(--duration-micro, 200ms) var(--ease-out, ease-out),
+    color var(--duration-micro, 200ms) var(--ease-out, ease-out);
+}
+
+/* Top-edge light-sheen sweep — a soft diagonal highlight that sweeps across on hover. Purely
+   decorative, so it's inert (no pointer-events, clipped to the button's own border-radius) and
+   entirely transform-driven, making it free to suppress under motion-off/reduced-motion. */
+/* Owner decision 2026-07-08: the sliding sheen is retired everywhere — on hover every button
+   glows AROUND its own shape instead (the behavior the icon variant already had, which the
+   owner singled out as the one button that felt right). */
+.btn-interactive::before {
+  content: none;
+}
+
+.btn-interactive:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--accent) 55%, transparent),
+    0 0 18px var(--accent-glow),
+    var(--shadow-ambient);
+}
+
+/*
+ * Icon-only/circular variant (V5a fix 2 — owner: hover sheen "goes to the right", not
+ * synchronized, "worst on circular icon buttons": a11y badge, chat launcher, theme toggle). Root
+ * cause: the sweep is a diagonal (115deg) linear-gradient translated across the button's full
+ * bounding box, then clipped to whatever border-radius the button has. On a small CIRCULAR button
+ * that clip is a circle, not a rounded rect — the diagonal gradient's corners get cut unevenly by
+ * that circular mask, so mid-sweep the visible highlight is a lopsided crescent anchored near one
+ * edge rather than a clean traveling band, which reads as a detached rightward streak rather than
+ * a synchronized sweep (worse than on rectangular buttons, where the effect is subtle enough to
+ * pass unnoticed). Rather than fight the gradient math for one specific shape, icon-only buttons
+ * opt out of the sweep entirely via this single shared variant class (added alongside
+ * `.btn-interactive`, not a per-component duplicate) — lift + glow + press feedback is unchanged.
+ */
+/* .btn-interactive--icon is now visually identical to the base class (the sweep it used to
+   opt out of no longer exists); the class stays on call sites as a harmless marker. */
+
+.btn-interactive:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.02);
+  filter: brightness(1.08);
+  box-shadow: 0 4px 20px -4px var(--accent-glow);
+}
+
+.btn-interactive:active:not(:disabled) {
+  transform: scale(0.97);
+  filter: brightness(0.97);
+  box-shadow: 0 2px 8px -3px var(--accent-glow);
+}
+
+.btn-interactive:disabled,
+.btn-interactive[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.5;
+  filter: none;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-interactive:disabled::before,
+.btn-interactive[aria-disabled='true']::before {
+  opacity: 0;
+}
+
+/* Motion-off / reduced-motion: no transform (including the sheen sweep, which relies on a
+   translateX), but hover/press must still visibly react — border + background + glow shift take
+   over as the sole feedback channel. */
+@media (prefers-reduced-motion: reduce) {
+  .btn-interactive:hover:not(:disabled),
+  .btn-interactive:active:not(:disabled) {
+    transform: none;
+  }
+
+  .btn-interactive:hover:not(:disabled)::before,
+  .btn-interactive:active:not(:disabled)::before {
+    transform: none;
+    opacity: 0;
+  }
+
+  .btn-interactive:hover:not(:disabled) {
+    border-color: var(--accent);
+    background-color: var(--surface-glass-strong);
+    box-shadow: 0 0 0 1px var(--accent-glow);
+  }
+
+  .btn-interactive:active:not(:disabled) {
+    border-color: var(--accent);
+    background-color: var(--surface-glass-strong);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+}
+
+html[data-motion='off'] .btn-interactive:hover:not(:disabled),
+html[data-motion='off'] .btn-interactive:active:not(:disabled) {
+  transform: none;
+}
+
+html[data-motion='off'] .btn-interactive:hover:not(:disabled)::before,
+html[data-motion='off'] .btn-interactive:active:not(:disabled)::before {
+  transform: none;
+  opacity: 0;
+}
+
+html[data-motion='off'] .btn-interactive:hover:not(:disabled) {
+  border-color: var(--accent);
+  background-color: var(--surface-glass-strong);
+  box-shadow: 0 0 0 1px var(--accent-glow);
+}
+
+html[data-motion='off'] .btn-interactive:active:not(:disabled) {
+  border-color: var(--accent);
+  background-color: var(--surface-glass-strong);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+} /* end @layer utilities (.btn-interactive) */

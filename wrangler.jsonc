@@ -1,0 +1,45 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Phase 4 (chatbot) additions — see docs/chatbot.md for full activation steps. None of the
+  // bindings below affect local dev or `pnpm build`: the Astro Cloudflare adapter only reads them
+  // when the Worker actually runs on Cloudflare, and every adapter in src/config/llm.ts already
+  // falls back to a zero-credential dev implementation (LexicalIndex, EchoDevProvider) whenever a
+  // binding is absent — which applies to any chatbot binding not yet provisioned (see the
+  // per-binding notes below for what each one needs before it becomes active).
+  "name": "felipetavares-dev",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": "dist",
+
+  // Workers AI — powers WorkersAiProvider (LLM completion, spec's $0-by-default primary) and the
+  // bge-base-en-v1.5 embedding step VectorizeIndex/scripts/build-chat-index.ts --upsert use.
+  // Activates automatically once this project is bound to a Cloudflare account with Workers AI
+  // enabled — no code change needed, see src/config/llm.ts.
+  "ai": {
+    "binding": "AI"
+  },
+
+  // Vectorize — production retrieval index for the chatbot (spec sections 8 & 14). Must be
+  // created once before first deploy:
+  //   wrangler vectorize create fst-chat --dimensions=768 --metric=cosine
+  // (768 = bge-base-en-v1.5's output dimension). Until this exists and is populated via
+  // `pnpm build-chat-index --upsert`, VectorizeIndex is never constructed — getEmbeddingIndex()
+  // in src/config/llm.ts uses LexicalIndex instead.
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "fst-chat"
+    }
+  ],
+
+  // Rate-limit KV — shared by /api/contact (phase 2) and /api/chat (phase 4). Create once:
+  //   wrangler kv namespace create RATE_LIMIT_KV
+  // then paste the returned id below. Until configured, both routes use the in-memory
+  // RateLimiter adapter (process-memory only, resets on restart/cold-start).
+  "kv_namespaces": [
+    {
+      "binding": "RATE_LIMIT_KV",
+      "id": "aee9b06a9d81406d92d372250f8fb028"
+    }
+  ]
+}

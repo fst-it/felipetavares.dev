@@ -1,0 +1,30 @@
+# Cloudflare Pages/Workers security headers (spec section 11).
+# /.well-known/api-catalog — RFC 9727 linkset. No .json extension, so CF Pages won't
+# auto-set application/json; the RFC 9264 media type must be explicit.
+/.well-known/api-catalog
+  Content-Type: application/linkset+json
+
+# Homepage Link headers (RFC 8288) — advertise the API catalog (RFC 9727) and the MCP
+# server card for agent discovery. Comma-joined on one header line: CF Pages _headers
+# supports multiple values for the same header name when comma-separated per RFC 9110.
+/
+  Link: </.well-known/api-catalog>; rel="api-catalog", </.well-known/mcp/server-card.json>; rel="describedby"
+# TODO: script-src includes 'unsafe-inline' because the no-flash theme-init script in
+# BaseLayout.astro runs inline and Astro's static output doesn't have a per-request nonce
+# to attach to it. A stricter CSP would need either a build-time hash allowlist for that
+# exact script or moving theme init to an external file with a small FOUC trade-off.
+# script-src also allows static.cloudflareinsights.com (V3c commit 3) for the optional Cloudflare
+# Web Analytics beacon (src/components/astro/Analytics.astro) — only ever requested when
+# PUBLIC_CF_ANALYTICS_TOKEN is set, otherwise the component renders nothing and this allowance is
+# simply unused. connect-src includes cloudflareinsights.com too: the beacon reports page-view data
+# to that origin, and without it in connect-src the script would load but every report would be
+# silently blocked by the CSP, i.e. analytics would look "on" but never actually record anything.
+# font-src 'self' data: — the @fontsource-variable packages embed font subsets as data: URIs in
+# their generated CSS; without data: the fonts are blocked and a console error fires (confirmed via
+# Lighthouse Best-Practices audit; fixed in row 86).
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-src https://challenges.cloudflare.com https://fstit.substack.com; connect-src 'self' https://challenges.cloudflare.com https://cloudflareinsights.com; base-uri 'self'; form-action 'self'
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()

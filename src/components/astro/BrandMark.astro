@@ -1,0 +1,30 @@
+---
+/**
+ * Brand mark — owner's raster glyph (dual-gradient brain + arch, transparent PNG).
+ *
+ * Replaces the V5d generative SVG constellation with the raster brand asset.
+ * Source: public/brand-glyph.png (128×128, extracted from docs/brand/ by Commit 2 pipeline).
+ *
+ * API preserved: size, class props unchanged. `animated` is accepted but ignored
+ * (raster images don't support the SVG stroke-dashoffset draw-in animation).
+ */
+export interface Props {
+  size?: number;
+  animated?: boolean;
+  class?: string;
+}
+
+const { size = 32, class: className = '' } = Astro.props;
+---
+
+<img
+  src="/brand-glyph.png"
+  width={size}
+  height={size}
+  alt="Felipe Tavares — brain glyph brand mark"
+  role="img"
+  aria-label="Felipe Tavares — brain glyph brand mark"
+  class={className}
+  loading="eager"
+  decoding="async"
+/>

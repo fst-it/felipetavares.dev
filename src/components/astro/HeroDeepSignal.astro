@@ -1,0 +1,227 @@
+---
+/**
+ * HeroDeepSignal — the Claude-Design "Deep Signal" brain canvas (Option 1b) hosting the site's
+ * OWN text column (owner decision 2026-07-07): the 1b prototype's placeholder text/CTAs/stats
+ * were removed; slogan, headline, kinetic type, subhead, CTAs and intent chips come from the
+ * site content exactly as the previous hero rendered them. The canvas, scanlines and backdrop
+ * glow are the parts adopted from the handoff (engine used as-is — see src/lib/brain/).
+ */
+import { contentRepository } from '../../config/site';
+import BrainCanvas from '../islands/BrainCanvas';
+import KineticType, { type KineticPair } from '../islands/KineticType';
+import { resolveLocale, localeToPathPrefix } from '../../i18n';
+
+const locale = resolveLocale(Astro.currentLocale);
+const prefix = localeToPathPrefix(locale);
+const hero = await contentRepository.getHero(locale);
+const intentChips = await contentRepository.getIntentChips(locale);
+
+// EN curated pairs (V3-polish commit 4 — "lead" never pairs with a "leadership ..." noun).
+const EN_PAIRS: KineticPair[] = [
+  { verb: 'architect', noun: 'platforms' },
+  { verb: 'lead', noun: 'global teams' },
+  { verb: 'strategize', noun: 'AI systems' },
+  { verb: 'deliver', noun: 'platforms' },
+  { verb: 'architect', noun: 'AI systems' },
+  { verb: 'strategize', noun: 'data ecosystems' },
+  { verb: 'deliver', noun: 'AI systems' },
+  { verb: 'lead', noun: 'engineering organizations' },
+  { verb: 'architect', noun: 'data ecosystems' },
+  { verb: 'deliver', noun: 'data ecosystems' },
+];
+
+// PT-BR curated pairs (V3d addendum) — restructured, not word-for-word ("estrategizo" reads
+// invented; "desenho estratégias para" is the natural executive register). Never-share-a-stem
+// rule holds: "lidero" pairs only with "times globais" / "organizações de engenharia".
+const PT_PAIRS: KineticPair[] = [
+  { verb: 'arquiteto', noun: 'plataformas' },
+  { verb: 'lidero', noun: 'times globais' },
+  { verb: 'desenho estratégias para', noun: 'sistemas de IA' },
+  { verb: 'entrego', noun: 'plataformas' },
+  { verb: 'arquiteto', noun: 'sistemas de IA' },
+  { verb: 'desenho estratégias para', noun: 'ecossistemas de dados' },
+  { verb: 'entrego', noun: 'sistemas de IA' },
+  { verb: 'lidero', noun: 'organizações de engenharia' },
+  { verb: 'arquiteto', noun: 'ecossistemas de dados' },
+  { verb: 'entrego', noun: 'ecossistemas de dados' },
+];
+
+const kineticPairs = locale === 'pt-br' ? PT_PAIRS : EN_PAIRS;
+const kineticPronoun = locale === 'pt-br' ? 'Eu' : 'I';
+---
+
+<section class="hero-ds" aria-label="Hero">
+  <!-- Scanlines overlay (1b spec: repeating-linear-gradient, 80px pitch, rgba(93,182,255,.035)) -->
+  <div class="hero-ds-scanlines" aria-hidden="true"></div>
+
+  <!-- Brain canvas — desktop: 900×780 bleeding off the right edge; mobile: full-bleed dimmed
+       background behind the text (owner decision 2026-07-08). Engine handles resize/DPR. -->
+  <div class="hero-ds-canvas-wrap" aria-hidden="true">
+    <BrainCanvas client:visible />
+  </div>
+
+  <!-- Mobile-only legibility scrim: guarantees text contrast over the dimmed brain. -->
+  <div class="hero-ds-scrim" aria-hidden="true"></div>
+
+  <!-- Site's own text column (previous hero design + words, verbatim) -->
+  <div class="hero-ds-content text-center lg:text-left">
+    <p class="font-display text-sm font-semibold uppercase tracking-wider text-[var(--accent)]">{hero.slogan}</p>
+    <h1 class="mt-3 text-balance" data-reveal>{hero.headline}</h1>
+
+    <!-- min-h-28 reserves 7rem on narrow phones so the layout below (subhead, CTAs, chips) stays
+         anchored while the kinetic text cycles between short one-row phrases and longer two-row
+         phrases. sm:min-h-0 removes the reservation at ≥640px where the wider viewport fits all
+         phrases in one row without reflow.
+         The pronoun is now a prop on KineticType (ledger row 101) so the entire phrase flows as
+         one inline text block — no outer flex needed; text-align from .hero-ds-content handles
+         centering (mobile) and left-alignment (lg+). -->
+    <p class="mt-5 min-h-28 font-display text-2xl text-[var(--text)] sm:min-h-0 sm:text-3xl">
+      <KineticType pairs={kineticPairs} pronoun={kineticPronoun} client:visible />
+    </p>
+
+    <p class="mx-auto mt-6 max-w-2xl text-lg text-muted lg:mx-0">{hero.subhead}</p>
+
+    <div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
+      <a
+        href={`${prefix}${hero.primaryCtaHref}`}
+        class="border-beam w-full rounded-[var(--radius-sm)] bg-[var(--accent)] accent-bg-image px-6 py-3 text-center font-semibold text-[var(--accent-contrast)] btn-interactive sm:w-auto"
+      >
+        {hero.primaryCtaLabel}
+      </a>
+      <a
+        href={`${prefix}${hero.secondaryCtaHref}`}
+        class="glass w-full rounded-[var(--radius-sm)] px-6 py-3 text-center font-semibold text-[var(--text)] btn-interactive sm:w-auto"
+      >
+        {hero.secondaryCtaLabel}
+      </a>
+    </div>
+
+    <ul class="mt-6 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+      {
+        intentChips.map((chip) => (
+          <li>
+            <a
+              href={`${prefix}${chip.href}`}
+              class="glass btn-interactive inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-medium text-muted transition-colors duration-200 hover:text-[var(--text)]"
+            >
+              {chip.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  /* ── Hero shell: 1b backdrop (kept from the handoff) ── */
+  .hero-ds {
+    --hero-bg: #070b14;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(1000px 700px at 62% 40%, rgba(30, 90, 200, 0.13), transparent 62%),
+      radial-gradient(500px 400px at 90% 85%, rgba(255, 110, 20, 0.07), transparent 60%),
+      var(--hero-bg);
+    min-height: 480px;
+  }
+
+  /* ── Horizontal scanlines ── */
+  .hero-ds-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0 79px,
+      rgba(93, 182, 255, 0.035) 79px 80px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Brain canvas wrapper ──
+     Mobile: full-bleed dimmed living background behind the text (README's "dimmed background
+     layer" branch). Desktop (≥768px): the 1b composition — 900×780 bleeding off the right. */
+  .hero-ds-canvas-wrap {
+    position: absolute;
+    inset: 0;
+    opacity: 0.45;
+    z-index: 1;
+  }
+
+  /* Mobile-only scrim between canvas (z-1) and text (z-3): keeps body text at full contrast
+     over the brightest neurons without killing the canvas at the edges. */
+  .hero-ds-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(7, 11, 20, 0.78) 0%,
+      rgba(7, 11, 20, 0.55) 45%,
+      rgba(7, 11, 20, 0.8) 100%
+    );
+  }
+
+  /* ── Text column: site design, overlapping the brain like 1b's headline ── */
+  .hero-ds-content {
+    position: relative;
+    z-index: 3;
+    padding: 48px 24px 56px;
+  }
+
+  /* ── Light theme (owner 2026-07-08): the hero follows the site theme — pale surface, deepened
+     blue/orange glows; the engine gets a light color config from BrainCanvas in parallel. ── */
+  :global(html.theme-light) .hero-ds {
+    --hero-bg: #f4f6f9;
+    background:
+      radial-gradient(1000px 700px at 62% 40%, rgba(37, 111, 224, 0.1), transparent 62%),
+      radial-gradient(500px 400px at 90% 85%, rgba(194, 84, 10, 0.07), transparent 60%),
+      var(--hero-bg);
+  }
+  :global(html.theme-light) .hero-ds-scanlines {
+    background: repeating-linear-gradient(0deg, transparent 0 79px, rgba(37, 111, 224, 0.05) 79px 80px);
+  }
+  :global(html.theme-light) .hero-ds-scrim {
+    background: linear-gradient(
+      180deg,
+      rgba(244, 246, 249, 0.82) 0%,
+      rgba(244, 246, 249, 0.58) 45%,
+      rgba(244, 246, 249, 0.85) 100%
+    );
+  }
+
+  @media (min-width: 768px) {
+    .hero-ds {
+      min-height: 720px;
+    }
+    .hero-ds-canvas-wrap {
+      inset: auto;
+      right: -60px;
+      top: 40px;
+      width: 900px;
+      height: 780px;
+      opacity: 1;
+    }
+    .hero-ds-scrim {
+      display: none;
+    }
+    .hero-ds-content {
+      max-width: 680px;
+      /* pt aligned to 80px scanline pitch: 160px = 2 × 80px places the content start
+         on the scanline grid so the CTA rows land on or near a scanline. */
+      padding: 160px 0 80px 48px;
+      /* Pass pointer events through to the canvas beneath — the text column overlaps
+         the brain canvas at reduced desktop widths and the default auto would intercept
+         all pointermove/pointerdown events before they reach the canvas element (where
+         the engine's listeners live). Interactive descendants restore pointer-events. */
+      pointer-events: none;
+    }
+    /* Restore interactivity on every clickable descendant. */
+    .hero-ds-content a,
+    .hero-ds-content button {
+      pointer-events: auto;
+    }
+  }
+</style>

@@ -1,0 +1,53 @@
+---
+/**
+ * Small circular country flag (V5a fix 3d) — decorative-but-labeled icon next to each Journey
+ * role's location. SVGs vendored from the `circle-flags` package (MIT, HatScripts/circle-flags)
+ * rather than kept as an npm dependency: only 3 countries ever appear across the role data
+ * (Brazil/BR, Netherlands/NL, Germany/DE, Portugal/PT — verified by grepping every
+ * content/roles/*.json `location` field), so copying those SVGs in directly avoids carrying an
+ * unused ~560KB package (hundreds of flags this site will never render) just to reference them.
+ *
+ * Each flag's `<mask>` needs a page-unique id — the source SVGs all reuse `id="a"`, which would
+ * collide (and silently break each other's clip) once more than one flag renders on the same
+ * page (every Journey role chapter renders one). `maskId` is generated per-instance from the
+ * country code + a passed-in `uniqueKey` so multiple flags for the same country (unlikely here,
+ * but not impossible) still don't collide.
+ */
+export interface Props {
+  /** ISO 3166-1 alpha-2 country code, lowercase (e.g. "br", "nl", "de", "gb", "pt"). */
+  country: 'br' | 'nl' | 'de' | 'gb' | 'pt';
+  /** Distinguishes this instance's mask id from any other flag of the SAME country rendered
+   *  elsewhere on the page (e.g. the role's slug). */
+  uniqueKey: string;
+  size?: number;
+  class?: string;
+}
+
+const { country, uniqueKey, size = 16, class: className } = Astro.props;
+const maskId = `flag-${country}-${uniqueKey}`;
+
+// Path data only (no <svg>/<mask>/<g> wrapper) — the wrapper below supplies a per-instance mask id
+// so multiple flags on one page never share (and collide on) the source files' shared `id="a"`.
+const FLAG_PATHS: Record<Props['country'], string> = {
+  br: '<path fill="#6da544" d="M0 0h512v512H0z"/><path fill="#ffda44" d="M256 100.2 467.5 256 256 411.8 44.5 256z"/><path fill="#eee" d="M174.2 221a87 87 0 0 0-7.2 36.3l162 49.8a88.5 88.5 0 0 0 14.4-34c-40.6-65.3-119.7-80.3-169.1-52z"/><path fill="#0052b4" d="M255.7 167a89 89 0 0 0-41.9 10.6 89 89 0 0 0-39.6 43.4 181.7 181.7 0 0 1 169.1 52.2 89 89 0 0 0-9-59.4 89 89 0 0 0-78.6-46.8zM212 250.5a149 149 0 0 0-45 6.8 89 89 0 0 0 10.5 40.9 89 89 0 0 0 120.6 36.2 89 89 0 0 0 30.7-27.3A151 151 0 0 0 212 250.5z"/>',
+  nl: '<path fill="#eee" d="m0 167 253.8-19.3L512 167v178l-254.9 32.3L0 345z"/><path fill="#a2001d" d="M0 0h512v167H0z"/><path fill="#0052b4" d="M0 345h512v167H0z"/>',
+  de: '<path fill="#ffda44" d="m0 345 256.7-25.5L512 345v167H0z"/><path fill="#d80027" d="m0 167 255-23 257 23v178H0z"/><path fill="#333" d="M0 0h512v167H0z"/>',
+  // GB — United Kingdom flag (Union Jack circle variant). Used for EN locale in LanguageSwitcher
+  // (EN is conventionally represented as GB/UK; a BR flag covers the PT-BR locale).
+  gb: '<path fill="#eee" d="M0 0h512v512H0z"/><path fill="#0052b4" d="M0 0h512v512H0z" opacity=".01"/><path fill="#0052b4" d="M0 0v57.2L454.8 512H512v-57.2L57.2 0H0zm512 0v57.2L57.2 512H0v-57.2L454.8 0H512z"/><path fill="#eee" d="M213.3 0v512h85.4V0h-85.4zM0 213.3v85.4h512v-85.4H0z"/><path fill="#d80027" d="M0 0l.1.1L180.2 0H0zm331.8 0H512v180.2L331.8 0zM0 331.8 0 512h180.2L0 331.8zm331.8 512L512 512v-180.2L331.8 512z"/><path fill="#d80027" d="M0 213.3v85.4h512v-85.4H0zM213.3 0v512h85.4V0h-85.4z"/>',
+  // PT — Portugal flag (simplified circle variant: green left stripe, red right stripe). The
+  // coat of arms detail is not legible at 16px, so the two-stripe shape is the most recognizable
+  // form at the sizes this site renders flags.
+  pt: '<path fill="#d52b1e" d="M0 0h512v512H0z"/><path fill="#006600" d="M0 0h204.8v512H0z"/>',
+};
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width={size}
+  height={size}
+  viewBox="0 0 512 512"
+  aria-hidden="true"
+  class={className}
+  set:html={`<mask id="${maskId}"><circle cx="256" cy="256" r="256" fill="#fff"/></mask><g mask="url(#${maskId})">${FLAG_PATHS[country]}</g>`}
+/>

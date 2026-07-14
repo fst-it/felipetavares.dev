@@ -1,0 +1,29 @@
+{
+  "org": "PwC Netherlands",
+  "title": "Senior Manager, Data and SAP",
+  "start": "2019-07",
+  "end": "2020-11",
+  "location": "Amsterdam, NL",
+  "arc": "Taking PwC's SAP advisory from its first Netherlands program to established practice",
+  "arcPt": "Levando o SAP advisory da PwC do primeiro programa nos Países Baixos a uma prática estabelecida",
+  "impact": [
+    {
+      "metric": "First SAP program",
+      "narrative": "Responsible for the first SAP program ever sold by PwC in the Netherlands — a utilities company digital transformation that defined the ETRM/ERP capability boundary and asset-management split across both systems.",
+      "narrativePt": "Responsável pelo primeiro programa SAP vendido pela PwC nos Países Baixos — uma transformação digital de empresa de utilities que definiu a fronteira de capacidades entre ETRM e ERP, incluindo a separação de gestão de ativos entre os dois sistemas."
+    },
+    {
+      "metric": "Global brewer",
+      "narrative": "Led the Central Finance Data and R2R workstream at a major global brewer — the most complex financial data design challenge in the program.",
+      "narrativePt": "Liderou o workstream de Central Finance Data e R2R em uma grande cervejaria global — o desafio mais complexo de design de dados financeiros no programa."
+    },
+    {
+      "metric": "Practice inception",
+      "narrative": "Led the inception of PwC's SAP practice in the Netherlands, establishing the delivery model and team structure from the ground up.",
+      "narrativePt": "Liderou a criação da prática SAP da PwC nos Países Baixos, estabelecendo o modelo de entrega e a estrutura de equipe do zero."
+    }
+  ],
+  "domains": ["SAP Delivery, Strategy & Architecture", "Enterprise & Business Architecture"],
+  "order": 4,
+  "technologies": ["SAP", "Equias"]
+}

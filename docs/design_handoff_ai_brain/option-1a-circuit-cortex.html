@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Option 1a — Circuit Cortex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0b0e12;font-family:'Space Grotesk',system-ui,sans-serif}
+  a{color:#5db6ff;text-decoration:none}a:hover{color:#ff9a4d}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+</style>
+</head>
+<body>
+<!-- Hero is a fixed 1440x820 design reference; make responsive in the real implementation -->
+<div style="position:relative;width:1440px;height:820px;background:radial-gradient(900px 600px at 78% 45%, rgba(255,110,20,.09), transparent 60%),radial-gradient(700px 500px at 15% 90%, rgba(40,120,255,.08), transparent 60%),#0b0e12;overflow:hidden">
+  <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:26px 48px;z-index:3">
+    <div style="font:600 17px 'IBM Plex Mono',monospace;color:#f2ede6">ak<span style="color:#ff7a1a">.</span></div>
+    <div style="display:flex;gap:34px;font:500 13px 'Space Grotesk',sans-serif;color:rgba(242,237,230,.65)">
+      <span>Experience</span><span>Projects</span><span>Writing</span><span style="color:#ff9a4d">Contact</span>
+    </div>
+  </div>
+  <div style="position:absolute;left:48px;top:150px;width:560px;z-index:3;display:flex;flex-direction:column;gap:26px">
+    <div style="font:500 13px 'IBM Plex Mono',monospace;color:#5db6ff;letter-spacing:.08em">// HI, I'M ALEX KERN</div>
+    <h1 style="margin:0;font:600 58px/1.08 'Space Grotesk',sans-serif;color:#f2ede6;letter-spacing:-.02em">Digital leader who architects <span style="color:#ff7a1a">AI systems</span> that think at enterprise scale</h1>
+    <p style="margin:0;font:400 17px/1.65 'Space Grotesk',sans-serif;color:rgba(242,237,230,.62);max-width:480px">Fifteen years turning ambiguous strategy into running platforms — agentic workflows, LLMOps, and architectures that keep learning after launch.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <span style="font:500 12px 'IBM Plex Mono',monospace;color:#ffb26e;border:1px solid rgba(255,122,26,.4);border-radius:4px;padding:6px 12px">Enterprise Architecture</span>
+      <span style="font:500 12px 'IBM Plex Mono',monospace;color:#8ecbff;border:1px solid rgba(63,169,255,.4);border-radius:4px;padding:6px 12px">Applied AI</span>
+      <span style="font:500 12px 'IBM Plex Mono',monospace;color:#7fe0b8;border:1px solid rgba(47,191,143,.4);border-radius:4px;padding:6px 12px">LLMOps</span>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;margin-top:6px">
+      <span style="font:600 15px 'Space Grotesk',sans-serif;color:#0b0e12;background:#ff7a1a;border-radius:6px;padding:13px 26px;box-shadow:0 0 24px rgba(255,122,26,.35)">What I build</span>
+      <span style="font:600 15px 'Space Grotesk',sans-serif;color:#f2ede6;border:1px solid rgba(242,237,230,.25);border-radius:6px;padding:12px 24px">My path</span>
+      <span style="font:500 13px 'IBM Plex Mono',monospace;color:rgba(242,237,230,.45);margin-left:8px"><span style="color:#2fbf8f;animation:blink 1.6s infinite">●</span> open to hard problems</span>
+    </div>
+  </div>
+  <div style="position:absolute;right:20px;top:80px;width:740px;height:700px;z-index:2">
+    <canvas id="brain-1a" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+  </div>
+  <div style="position:absolute;right:48px;bottom:26px;font:400 11px 'IBM Plex Mono',monospace;color:rgba(242,237,230,.35);z-index:3">live neural mesh · 300 neurons · hover to probe · click to fire</div>
+</div>
+
+<script src="brain-engine.js"></script>
+<script src="brain-config-1a-circuit-cortex.js"></script>
+<script>
+  createBrainMesh(document.getElementById('brain-1a'), BRAIN_CONFIG_1A);
+</script>
+</body>
+</html>

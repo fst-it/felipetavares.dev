@@ -1,0 +1,27 @@
+---
+// JSON-LD only (spec section 10) — visual breadcrumb nav, where present, is authored inline per
+// page since its styling varies; this component just emits the structured-data companion.
+export interface Crumb {
+  name: string;
+  url: string;
+}
+
+export interface Props {
+  crumbs: Crumb[];
+}
+
+const { crumbs } = Astro.props;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: crumbs.map((crumb, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: crumb.name,
+    item: crumb.url,
+  })),
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />

@@ -1,0 +1,16 @@
+---
+export interface Props {
+  variant?: 'note' | 'warn';
+  title?: string;
+}
+
+const { variant = 'note', title } = Astro.props;
+const accentVar = variant === 'warn' ? 'var(--warn)' : 'var(--accent)';
+---
+
+<aside class="glass my-6 rounded-[var(--radius-md)] border-l-4 p-5" style={`border-left-color: ${accentVar};`}>
+  {title && <p class="font-display text-sm font-semibold text-[var(--text)]">{title}</p>}
+  <div class="mt-1 text-sm text-muted [&>p]:m-0">
+    <slot />
+  </div>
+</aside>

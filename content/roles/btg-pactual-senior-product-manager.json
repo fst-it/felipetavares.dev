@@ -1,0 +1,28 @@
+{
+  "org": "BTG Pactual",
+  "title": "Senior Product Manager, ERP & Treasury",
+  "start": "2013-09",
+  "end": "2016-08",
+  "location": "Rio de Janeiro, BR",
+  "arc": "Designing a trading business from the middle office out",
+  "arcPt": "Desenhando um negócio de trading a partir do middle office",
+  "impact": [
+    {
+      "metric": "Back-office & ERP",
+      "narrative": "Led the team that maintained and improved the bank's SAP ERP, supporting back-office operations across trading and asset management.",
+      "narrativePt": "Liderou a equipe responsável pela manutenção e melhoria do SAP ERP do banco, apoiando as operações de back-office em trading e gestão de ativos."
+    },
+    {
+      "metric": "Process design",
+      "narrative": "Designed the middle- and back-office process and flows — risk, P&L, position, MTM through settlement — for a commodities trading business stand-up.",
+      "narrativePt": "Desenhou os processos e fluxos de middle e back office — risco, P&L, posição, MTM até liquidação — para a estruturação de um negócio de trading de commodities."
+    },
+    {
+      "metric": "Regulatory programs",
+      "narrative": "Led the implementation of major regulatory programs, coordinating cross-functional squads across the trading and asset-management back office.",
+      "narrativePt": "Liderou a implementação de grandes programas regulatórios, coordenando squads multifuncionais no back office de trading e gestão de ativos."
+    }
+  ],
+  "domains": ["Enterprise & Business Architecture", "Portfolio & Program Management"],
+  "order": 7
+}

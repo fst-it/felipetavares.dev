@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroDeepSignal from '../components/astro/HeroDeepSignal.astro';
+import SkillDomainGrid from '../components/astro/SkillDomainGrid.astro';
+import FeaturedProjects from '../components/astro/FeaturedProjects.astro';
+import LatestWriting from '../components/astro/LatestWriting.astro';
+import CredibilityCta from '../components/astro/CredibilityCta.astro';
+import { siteConfig, contentRepository } from '../config/site';
+
+const [socialLinks, skillDomains, dossier] = await Promise.all([
+  contentRepository.getSocialLinks(),
+  contentRepository.getSkillDomains(),
+  contentRepository.getDossier(),
+]);
+
+// Person JSON-LD (spec section 10) — site-wide identity, only emitted once on Home.
+// `inLanguage` (V3d addendum) marks this as the EN rendering of the same Person entity described
+// on the PT-BR Home page.
+const personJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: siteConfig.name,
+  jobTitle: 'Senior Principal Architect Leader',
+  description: siteConfig.defaultDescription,
+  url: siteConfig.url,
+  sameAs: socialLinks.map((link) => link.url),
+  knowsAbout: skillDomains.map((d) => d.name),
+  alumniOf: dossier.education.map((e) => ({
+    '@type': 'EducationalOrganization',
+    name: e.school,
+  })),
+  inLanguage: 'en',
+};
+
+// WebSite JSON-LD — enables Google sitelinks searchbox eligibility.
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteConfig.name,
+  url: siteConfig.url,
+};
+---
+
+<BaseLayout title={siteConfig.name} markdownTwin="/home.md">
+  <script type="application/ld+json" set:html={JSON.stringify(personJsonLd)} is:inline />
+  <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} is:inline />
+  <HeroDeepSignal />
+  <SkillDomainGrid />
+  <FeaturedProjects />
+  <LatestWriting />
+  <CredibilityCta />
+</BaseLayout>

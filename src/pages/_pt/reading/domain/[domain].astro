@@ -1,0 +1,166 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import BreadcrumbList from '../../../../components/astro/BreadcrumbList.astro';
+import { contentRepository, siteConfig } from '../../../../config/site';
+import { getStrings } from '../../../../i18n';
+import { VERDICT_LABELS } from '../../../../core/entities/reading';
+import { formatCardDate } from '../../../../lib/format-date';
+import siteData from '../../../../../content/site/site.json';
+
+const DOMAIN_LABELS: Record<string, string> = Object.fromEntries(
+  siteData.site.skillDomains.map((d: { name: string }) => [
+    d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    d.name,
+  ])
+);
+
+export async function getStaticPaths() {
+  const domainSlugs: string[] = siteData.site.skillDomains.map((d: { name: string }) =>
+    d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  );
+  return domainSlugs.map((domain) => ({ params: { domain }, props: { domain } }));
+}
+
+const strings = getStrings('pt-br');
+const s = strings.readingPage;
+const { domain } = Astro.props as { domain: string };
+const label = DOMAIN_LABELS[domain] ?? domain;
+
+const allReadings = await contentRepository.getReadings();
+const readings = allReadings.filter((r) => r.domains.includes(domain));
+---
+
+<BaseLayout
+  title={`${label}: ${s.eyebrow}`}
+  description={`Leituras de Felipe Tavares em ${label}: veredictos honestos, ideias e pontos de atenção.`}
+  canonical={`${siteConfig.url}/pt/reading/domain/${domain}`}
+  alternatePath={`/reading/domain/${domain}`}
+>
+  <BreadcrumbList crumbs={[
+    { name: 'Home', url: siteConfig.url },
+    { name: s.eyebrow, url: `${siteConfig.url}/pt/reading` },
+    { name: label, url: `${siteConfig.url}/pt/reading/domain/${domain}` },
+  ]} />
+
+  <section class="relative overflow-hidden px-4 pb-11 pt-11 sm:pt-16" aria-labelledby="reading-filter-heading">
+    <div class="gradient-mesh" aria-hidden="true">
+      <div class="mesh-blob"></div>
+    </div>
+    <div class="relative z-10 mx-auto max-w-3xl text-center">
+      <nav aria-label="Breadcrumb" class="text-sm text-muted">
+        <a href="/pt/reading" class="hover:text-[var(--accent)]">{s.eyebrow}</a>
+        <span aria-hidden="true"> / </span>
+        <span>{label}</span>
+      </nav>
+      <p class="mb-2 mt-4 font-mono text-sm uppercase tracking-wider text-[var(--accent)]">{s.eyebrow}</p>
+      <h1 id="reading-filter-heading" class="text-balance">{label}</h1>
+    </div>
+  </section>
+
+  <section class="px-4 pb-11 sm:pb-16">
+    <div class="mx-auto max-w-6xl">
+      {
+        readings.length === 0 ? (
+          <div class="glass rounded-[var(--radius-md)] p-10 text-center">
+            <p class="text-base text-muted">{s.empty}</p>
+          </div>
+        ) : (
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {readings.map((reading) => (
+              <div data-card-motion class="glass flex flex-col gap-4 rounded-[var(--radius-md)] p-5">
+                <div>
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="shrink-0 rounded-full bg-[var(--surface-glass-strong)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-muted">
+                      {reading.type}
+                    </span>
+                    <span class="font-mono text-xs text-muted">{formatCardDate(reading.dateRead, 'pt-br')}</span>
+                  </div>
+                  <h2 class="mt-2 font-display text-lg font-semibold text-[var(--text)]">{reading.title}</h2>
+                  <p class="text-sm text-muted">{reading.author}</p>
+                </div>
+
+                <div>
+                  <span class="verdict-badge" data-verdict={reading.verdict}>
+                    {VERDICT_LABELS[reading.verdict].pt}
+                  </span>
+                  <p class="mt-2 text-base text-[var(--text)]">{reading.verdictLine}</p>
+                </div>
+
+                <div>
+                  <p class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">{s.ideasWorthStealing}</p>
+                  <ul class="space-y-1">
+                    {reading.ideasWorthStealing.map((idea) => (
+                      <li class="flex items-start gap-2 text-base text-[var(--text)]">
+                        <span class="mt-1 shrink-0 text-[var(--accent)]" aria-hidden="true">→</span>
+                        <span>{idea}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <p class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">{s.watchOuts}</p>
+                  <ul class="space-y-1">
+                    {reading.watchOuts.map((w) => (
+                      <li class="text-base text-muted">{w}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-muted">{s.whoShouldRead}</p>
+                  <p class="mt-1 text-base text-[var(--text)]">{reading.whoShouldRead}</p>
+                </div>
+
+                {reading.domains.length > 0 && (
+                  <ul class="flex flex-wrap gap-1.5">
+                    {reading.domains.map((d) => (
+                      <li class="rounded-full bg-[var(--surface-glass-strong)] px-2.5 py-1 text-xs text-muted">
+                        {d}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {reading.sourceUrl && (
+                  <a
+                    href={reading.sourceUrl}
+                    class="mt-auto text-sm font-medium text-[var(--accent)] hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {s.readMore}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      <p class="mx-auto mt-10 max-w-6xl text-sm text-muted">
+        <a href="/pt/reading" class="text-[var(--accent)] underline underline-offset-2">&larr; {s.eyebrow}</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--surface-glass-strong);
+  }
+
+  .verdict-badge[data-verdict='foundational'] { color: var(--accent); }
+  .verdict-badge[data-verdict='worth-your-hours'] { color: var(--success); }
+  .verdict-badge[data-verdict='situational'] { color: var(--warn); }
+  .verdict-badge[data-verdict='skip-unless'] { color: var(--text-muted); }
+</style>

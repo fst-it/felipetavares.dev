@@ -1,0 +1,24 @@
+{
+  "org": "EVBOX",
+  "title": "Head of Data & Analytics",
+  "start": "2020-12",
+  "end": "2021-09",
+  "location": "Amsterdam, NL",
+  "arc": "Building the data and analytics function and delivering significant savings across the business",
+  "arcPt": "Criando a função de dados e analytics e entregando economias significativas para o negócio",
+  "impact": [
+    {
+      "metric": "Cost savings",
+      "narrative": "Significantly reduced SAP programme cost and BI run-cost, demonstrating the direct business value of the new data and analytics function.",
+      "narrativePt": "Reduziu significativamente os custos do programa SAP e de operação de BI, demonstrando o valor direto da nova função de dados e analytics para o negócio."
+    },
+    {
+      "metric": "Data function",
+      "narrative": "Built and led the data and analytics function from the ground up at a fast-scaling EV charging infrastructure company — team, tooling, and operating model designed to support rapid growth.",
+      "narrativePt": "Construiu e liderou a função de dados e analytics do zero em uma empresa de infraestrutura de carregamento de VE em rápido crescimento — equipe, ferramentas e modelo operacional pensados para apoiar o crescimento acelerado."
+    }
+  ],
+  "domains": ["Data Management & Analytics", "Portfolio & Program Management"],
+  "order": 3,
+  "technologies": ["Snowflake", "SAP", "Salesforce"]
+}

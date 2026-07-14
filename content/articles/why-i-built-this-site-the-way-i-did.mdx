@@ -1,0 +1,123 @@
+---
+title: "Why I Built This Site the Way I Did"
+description: "The reasoning behind felipetavares.dev: Astro islands, hexagonal ports, a $0 stack forced by a hard constraint, and what I'd do differently now that more of it is shipped."
+pubDate: 2026-07-05
+tags:
+  - "Architecture"
+  - "AI & Agentic Engineering"
+draft: false
+---
+
+Most personal sites start with a template and end with a WordPress plugin problem. I wanted the
+opposite: a site whose own construction is a proof point for the kind of architecture leadership
+I write about. This is the story of the decisions behind felipetavares.dev — not a features list,
+but the reasoning, including the parts I got wrong or deferred.
+
+## The brief I gave myself
+
+The site had one non-negotiable constraint: **$0/month recurring**, domain already owned. Everything
+else — the CMS, the chatbot, the hosting, the analytics — had to fit inside free tiers with enough
+headroom that a personal site would never bump into a limit. That constraint did more design work
+than any aesthetic preference. It ruled out a hosted CMS with seat pricing, ruled out a
+pay-per-request LLM API as the default path, and pointed hard at a platform that already gives
+generous free compute: Cloudflare.
+
+It also ruled out over-engineering. A personal brand site doesn't need a database, doesn't need
+auth, doesn't need a search cluster. The interesting problem here isn't scale — it's making a
+content-heavy, SEO-critical, occasionally-interactive site that stays fast, stays cheap, and stays
+easy to extend without a rewrite six months in.
+
+## Astro, and why islands over a full SPA
+
+The site is built on **Astro 5** in static-first mode, with React used only for islands —
+components that genuinely need client-side interactivity: the theme toggle, the mobile menu, the
+contact form, the chat widget. Everything else — hero copy, navigation, article bodies, the
+projects grid — ships as plain HTML with zero client JavaScript.
+
+This matters for a site whose primary audience is a recruiter or a peer technologist skimming on
+a phone during a commute. Shipping a full React SPA for mostly-static content means paying a
+hydration tax on every page for interactivity nobody asked for. Astro's islands architecture lets
+me keep that JavaScript budget close to zero on content pages and spend it only where it earns its
+keep — a rule the design spec states explicitly as a performance budget (total JS on content pages
+under 50KB, islands lazy-loaded).
+
+The Cloudflare adapter runs the same codebase in **hybrid output**: pages are prerendered at build
+time onto the CDN, and the handful of routes that genuinely need a server — `/api/contact`,
+`/api/chat` — run as Workers functions. One deployment target, two rendering modes, chosen per
+route.
+
+## Hexagonal architecture for a site with "no backend"
+
+The part that surprises people: this site has a `src/core/` directory with zero framework imports,
+organized as pure TypeScript entities, ports, and services — the same hexagonal (ports & adapters)
+discipline I'd use on a much larger system. For a marketing site, that can look like
+over-engineering. It isn't, for one specific reason: **the content source is a stated architecture
+decision, not a foregone one.**
+
+Content lives in git today — Astro content collections reading MDX and JSON under `/content` —
+but the design spec calls this out as adapter #1 of several possible ones, with a hosted CMS
+(Sanity, Payload) as a plausible future adapter if the editing experience ever needs to outgrow
+git. The `ContentRepository` port is the seam:
+
+```ts
+export interface ContentRepository {
+  getArticles(opts?: { includeDrafts?: boolean }): Promise<Article[]>;
+  getArticle(slug: string): Promise<Article | undefined>;
+  getProjects(): Promise<Project[]>;
+  // ...roles, talks, testimonials, site singletons
+}
+```
+
+Every page imports `contentRepository` from `src/config/site.ts` — never the adapter directly.
+`GitContentRepository` is the only class that knows content lives in Astro collections. Swapping
+that adapter for a hosted CMS later is a new file plus a one-line change in `config/site.ts`; zero
+page-level changes. The same pattern applies to the chatbot's LLM provider — Workers AI today,
+Claude or another provider via a config-driven router rather than hardcoded into a component.
+
+Is this the simplest possible thing that could work? No — a page that calls `getCollection()`
+directly would be simpler for exactly one content source. But I've built and rebuilt career-tooling
+systems enough times to know that the "just call the API directly" version is the one that gets
+expensive to change. The port costs a small amount of indirection up front and buys back an
+afternoon, not a rewrite, when the content backend changes.
+
+## A design that degrades instead of breaking
+
+The visual language is deliberately layered so it degrades rather than breaking. Glass cards use
+`backdrop-filter: blur() saturate()` with a `@supports` fallback to a solid surface. The
+site-wide galaxy backdrop (WebGL, React Bits Galaxy.tsx under an MIT license) is gated behind
+motion preferences and renders near-invisible in light mode — fine ink specks instead of glowing
+stars — so content stays dominant. The hero (a vendored WebGL brain canvas) carries the site's
+own content, not placeholder copy, so it's readable even if the animation never fires.
+
+One design token source (`src/styles/tokens.css`) drives both dark and light themes through CSS
+custom properties, switched by a single class on `<html>`. Tailwind v4's `@theme` block maps
+those tokens into utility classes, so component markup never hardcodes a hex value — change a
+token, both themes update everywhere at once.
+
+The principle: no visual feature is load-bearing for content or navigation. That's the actual
+accessibility contract, not an afterthought applied after the fact.
+
+## What this article demonstrates
+
+This article is a small integration test of the publishing pipeline: `/writing` lists it by tag
+and reading time, this page renders a table of contents from its headings, and the publish-kit
+script (`pnpm publish-kit <slug>`) can turn this single MDX file into a Substack-ready HTML
+export, a LinkedIn post, a Reddit framing note, and an X thread — without hand-copying content
+between five editors. Write once in the canonical source, syndicate outward through generated
+artifacts rather than manual rewrites.
+
+## What I'd reconsider
+
+Two trade-offs I'd revisit. First, Keystatic runs in local mode in dev only for now —
+GitHub-mode editing (so I can publish from a phone without a terminal) needs a GitHub App I
+haven't set up yet. The git workflow is fast enough that this hasn't blocked anything, but it's
+the gap between "works" and "works from anywhere."
+
+Second, I underestimated how fast the design would evolve. The initial architectural decisions —
+Astro islands, hexagonal core, $0 Cloudflare stack — held up well across multiple design phases.
+But I spent time describing a design (liquid glass, gradient mesh hero) that got replaced before
+the site shipped publicly. The architecture was the right thing to pin in writing early; the
+visual identity less so.
+
+The chatbot is live and uses the same `core/ports` pattern I planned for it. That part went
+exactly as intended.

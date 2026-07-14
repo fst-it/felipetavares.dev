@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  quality:
+    name: Quality (check, unit tests, redaction gate, build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '11'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check (astro check + tsc)
+        run: pnpm check
+
+      - name: Unit tests (vitest)
+        run: pnpm test
+
+      - name: Redaction gate — source content
+        run: pnpm redaction-gate
+
+      - name: Build
+        run: pnpm build
+
+      - name: Redaction gate — build output (dist/)
+        run: pnpm redaction-gate
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+      # packages/mcp — a separate workspace package (own tsconfig/vitest config, delivery surface
+      # over src/core, see docs/mcp.md). Type-checked, tested, and built alongside the site so a
+      # regression there fails CI the same as one in src/.
+      - name: MCP package — type check
+        run: pnpm --filter felipetavares-mcp check
+
+      - name: MCP package — unit tests
+        run: pnpm --filter felipetavares-mcp test
+
+      - name: MCP package — build (stdio + Worker bundles)
+        run: pnpm --filter felipetavares-mcp build
+
+      - name: MCP package — npm pack dry run
+        run: cd packages/mcp && npm pack --dry-run
+
+  e2e:
+    name: E2E (Playwright, cross-engine)
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '11'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # tests/e2e runs against `pnpm dev` (see playwright.config.ts for why: the Cloudflare
+      # adapter's `astro preview` doesn't work at all, and `wrangler pages dev dist` can't serve
+      # POST /api/chat without a real Cloudflare account) — no build artifact download needed here,
+      # `pnpm e2e`'s webServer starts its own dev server per the config.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          # pnpm-lock.yaml's hash changes whenever @playwright/test's resolved version changes,
+          # which is exactly when the cached browser binaries need to be reinstalled.
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+      # Even with a cache hit, OS-level shared libraries (--with-deps) aren't covered by the
+      # browser-binary cache above, so make sure they're present unconditionally — this is a no-op
+      # apt-get on a cache hit where they're already installed.
+      - name: Install Playwright OS dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium firefox webkit
+
+      - name: Run E2E suite (all engines)
+        run: pnpm e2e
+
+      # Build-time dossier PDF generation was archived by owner decision (2026-07-08): the
+      # dossier's print stylesheet is the single PDF path — zero maintenance, never stale.
+      - name: Upload Playwright report and traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  # No GitHub Actions deploy job. The site is deployed to Cloudflare Pages as a Direct Upload
+  # project (`wrangler pages deploy dist`) — the repo is not git-connected to Cloudflare, so pushes
+  # don't auto-deploy. The commented snippet below shows how to automate deploys with a scoped
+  # CLOUDFLARE_API_TOKEN (Account → Cloudflare Pages → Edit) if that's ever preferred. If
+  # activating: needs `quality` and `e2e`, downloads the `dist` artifact (or rebuilds), and runs:
+  #
+  # deploy:
+  #   name: Deploy (Cloudflare Pages)
+  #   needs: [quality, e2e]
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: pnpm/action-setup@v4
+  #     - uses: actions/setup-node@v4
+  #       with: { node-version: '22', cache: pnpm }
+  #     - run: pnpm install --frozen-lockfile
+  #     - run: pnpm build
+  #     - uses: cloudflare/wrangler-action@v3
+  #       with:
+  #         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  #         command: pages deploy dist --project-name=felipetavares-dev

@@ -1,0 +1,77 @@
+---
+import type { Role } from '../../core/entities/role';
+
+export interface Props {
+  roles: Role[];
+}
+
+const { roles } = Astro.props;
+---
+
+<nav
+  class="journey-rail glass fixed top-1/2 right-6 z-30 hidden -translate-y-1/2 flex-col gap-3 rounded-full p-3 lg:flex"
+  aria-label="Journey progress"
+>
+  {
+    roles.map((role, i) => (
+      <a
+        href={`#chapter-${i}`}
+        class="rail-dot h-2.5 w-2.5 rounded-full bg-[var(--surface-glass-strong)] transition-all duration-200"
+        aria-label={`Jump to ${role.org} — ${role.arc}`}
+        data-index={i}
+      />
+    ))
+  }
+</nav>
+
+<script>
+  // Highlights the rail dot matching the chapter currently in view, and
+  // (as a fallback for browsers without `animation-timeline: view()`) toggles
+  // `.is-visible` on chapters so their CSS transition-based reveal can fire.
+  const chapters = Array.from(document.querySelectorAll<HTMLElement>('.journey-chapter'));
+  const dots = Array.from(document.querySelectorAll<HTMLElement>('.rail-dot'));
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if ('IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+    chapters.forEach((chapter) => revealObserver.observe(chapter));
+
+    if (dots.length > 0 && !prefersReducedMotion) {
+      const railObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const index = chapters.indexOf(entry.target as HTMLElement);
+            const dot = dots[index];
+            if (!dot) return;
+            if (entry.isIntersecting) {
+              dots.forEach((d) => d.classList.remove('rail-dot-active'));
+              dot.classList.add('rail-dot-active');
+            }
+          });
+        },
+        { threshold: 0.5 }
+      );
+      chapters.forEach((chapter) => railObserver.observe(chapter));
+    }
+  } else {
+    // No IntersectionObserver at all — show everything, no progressive reveal.
+    chapters.forEach((chapter) => chapter.classList.add('is-visible'));
+  }
+</script>
+
+<style>
+  .rail-dot-active {
+    background: var(--accent);
+    transform: scale(1.4);
+  }
+</style>

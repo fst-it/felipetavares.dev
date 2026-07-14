@@ -1,0 +1,367 @@
+---
+import '../styles/global.css';
+import { siteConfig } from '../config/site';
+import Header from '../components/astro/Header.astro';
+import Footer from '../components/astro/Footer.astro';
+import ScrollProgressThread from '../components/astro/ScrollProgressThread.astro';
+import ChatWidget from '../components/islands/ChatWidget';
+import AccessibilityPanel from '../components/islands/AccessibilityPanel';
+import CommandPaletteMount from '../components/astro/CommandPaletteMount.astro';
+import Analytics from '../components/astro/Analytics.astro';
+import Starfield from '../components/astro/Starfield.astro';
+import GalaxyBackdrop from '../components/islands/GalaxyBackdrop';
+import { resolveLocale, getStrings } from '../i18n';
+
+export interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+  ogImage?: string;
+  /** Override the Open Graph type — defaults to "website"; pass "article" on article pages. */
+  ogType?: string;
+  /** Absolute or root-relative path to this page's markdown twin (V3b addendum commit 2), e.g.
+   *  "/writing/my-post.md". Omit on pages without one (tag listings, API routes, OG images). */
+  markdownTwin?: string;
+  /**
+   * Root-relative path to this same page's counterpart in the *other* locale (V3d addendum), e.g.
+   * "/pt/experience" when this page is "/experience", or "/experience" when this page is
+   * "/pt/experience". Emits paired `hreflang` alternate `<link>` tags (plus `x-default` pointing
+   * at the English version) when set. Omitted on pages with no translated counterpart in v1 —
+   * individual articles and project deep-dives stay EN-only, so they simply don't get this prop.
+   */
+  alternatePath?: string;
+  /** Emits <meta name="robots" content="noindex"> — for internal pages like /lab. */
+  noindex?: boolean;
+}
+
+// Default per-page OG image path mirrors the /og/[...slug].png.ts route naming: the site root
+// maps to "home", nested routes drop their leading/trailing slashes.
+function defaultOgImagePath(pathname: string): string {
+  const trimmed = pathname.replace(/^\/|\/$/g, '');
+  return `${siteConfig.url}/og/${trimmed === '' ? 'home' : trimmed}.png`;
+}
+
+const {
+  title,
+  description = siteConfig.defaultDescription,
+  canonical = new URL(Astro.url.pathname, siteConfig.url).toString(),
+  ogImage = defaultOgImagePath(Astro.url.pathname),
+  ogType = 'website',
+  markdownTwin,
+  alternatePath,
+  noindex = false,
+} = Astro.props;
+
+const pageTitle = title === siteConfig.name ? title : `${title} — ${siteConfig.name}`;
+
+const locale = resolveLocale(Astro.currentLocale);
+const htmlLang = locale === 'pt-br' ? 'pt-BR' : 'en';
+
+// hreflang pair (V3d addendum): the current page always alternates to itself in its own
+// language; `alternatePath` (when provided) supplies the sibling locale's URL. `x-default` points
+// at the English version since English is the unprefixed default locale for this site.
+const thisPageHref = new URL(Astro.url.pathname, siteConfig.url).toString();
+const otherPageHref = alternatePath ? new URL(alternatePath, siteConfig.url).toString() : undefined;
+const enHref = locale === 'en' ? thisPageHref : otherPageHref;
+const ptHref = locale === 'pt-br' ? thisPageHref : otherPageHref;
+---
+
+<!doctype html>
+<html lang={htmlLang} class="theme-dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="alternate" type="application/rss+xml" title={`${siteConfig.name} — Writing`} href="/rss.xml" />
+    {markdownTwin && <link rel="alternate" type="text/markdown" href={markdownTwin} />}
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical} />
+
+    {enHref && <link rel="alternate" hreflang="en" href={enHref} />}
+    {ptHref && <link rel="alternate" hreflang="pt-BR" href={ptHref} />}
+    {enHref && <link rel="alternate" hreflang="x-default" href={enHref} />}
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    {siteConfig.twitterHandle && <meta name="twitter:site" content={siteConfig.twitterHandle} />}
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+    <Analytics />
+
+    <!--
+      No-flash theme init: read persisted preference before first paint. Necessarily inlined here
+      rather than importing src/lib/theme.ts (no module import can run before first paint), but
+      mirrors its `STORAGE_KEY`/class-toggle logic exactly — keep the two in sync if either changes.
+    -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : 'dark';
+          document.documentElement.classList.remove('theme-dark', 'theme-light');
+          document.documentElement.classList.add('theme-' + theme);
+        } catch (e) {
+          document.documentElement.classList.add('theme-dark');
+        }
+      })();
+    </script>
+
+    <!--
+      No-flash motion init (addendum V2b, motion kill-switch): resolves `html[data-motion]`
+      before first paint, same pattern as the theme script above. Precedence: an explicit
+      localStorage override (written by `setMotionOverride` in src/lib/motion.ts, e.g. the V2c
+      a11y panel) always wins; otherwise falls back to `prefers-reduced-motion: reduce`.
+    -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('motion');
+          var motion =
+            stored === 'on' || stored === 'off'
+              ? stored
+              : window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                ? 'off'
+                : 'on';
+          document.documentElement.setAttribute('data-motion', motion);
+        } catch (e) {
+          document.documentElement.setAttribute('data-motion', 'on');
+        }
+      })();
+    </script>
+
+    <!--
+      No-flash a11y-panel init (addendum V2c section 7): resolves `html[data-contrast]`,
+      `html[data-text]`, and (V5b C2) `html[data-accent]` before first paint, same pattern as
+      the theme/motion scripts above. Written by src/components/islands/AccessibilityPanel.tsx.
+    -->
+    <script is:inline>
+      (function () {
+        try {
+          var contrast = localStorage.getItem('contrast');
+          document.documentElement.setAttribute('data-contrast', contrast === 'high' ? 'high' : 'normal');
+        } catch (e) {
+          document.documentElement.setAttribute('data-contrast', 'normal');
+        }
+        try {
+          var text = localStorage.getItem('text');
+          document.documentElement.setAttribute('data-text', text === 'large' ? 'large' : 'normal');
+        } catch (e) {
+          document.documentElement.setAttribute('data-text', 'normal');
+        }
+        try {
+          var accent = localStorage.getItem('accent');
+          document.documentElement.setAttribute('data-accent', accent === 'orange' || accent === 'gradient' ? accent : 'blue');
+        } catch (e) {
+          document.documentElement.setAttribute('data-accent', 'blue');
+        }
+      })();
+    </script>
+    {/* Item 12 (2026-07-06 refinement): DEV-only stale-server guard — one-line console.warn
+        logging the server start time so the owner knows when to restart after config changes.
+        The timestamp is injected at SSR time (changes on each request during dev), not at build
+        time, so it reflects when this page was rendered, not when Vite started. */}
+    {import.meta.env.DEV && (
+      <script is:inline define:vars={{ _t: new Date().toISOString() }}>
+        console.warn('[fst dev] server rendered at ' + _t + ' — restart if you changed astro.config or major layout files.');
+      </script>
+    )}
+
+    <!--
+      WebMCP tool registration (ledger row 91) — progressive enhancement; no-ops silently in
+      browsers that do not implement the WebMCP API. Spec: https://webmachinelearning.github.io/webmcp/
+      The live API surface is `document.modelContext.registerTool()` (not `navigator.modelContext`
+      and not `provideContext` — the spec uses registerTool). Two tools are registered:
+        • get_cv      — no inputs; fetches /api/cv.json and returns the JSON text.
+        • ask_felipe  — input {question:string}; POSTs to /api/chat, accumulates SSE delta events,
+                        returns the final assistant text.
+      Dependency-free vanilla JS; all fetches are same-origin; CSP 'unsafe-inline' allows it.
+    -->
+    <script is:inline>
+      (function () {
+        var ctx = document.modelContext;
+        if (!ctx || typeof ctx.registerTool !== 'function') return;
+
+        ctx.registerTool({
+          name: 'get_cv',
+          description: "Felipe Tavares's CV as JSON Resume",
+          annotations: { readOnlyHint: true },
+          execute: function () {
+            return fetch('/api/cv.json').then(function (r) { return r.text(); });
+          }
+        });
+
+        ctx.registerTool({
+          name: 'ask_felipe',
+          description: "Ask Felipe's AI assistant about his experience, projects, and writing",
+          inputSchema: {
+            type: 'object',
+            properties: { question: { type: 'string' } },
+            required: ['question']
+          },
+          execute: function (input) {
+            return fetch('/api/chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ messages: [{ role: 'user', content: String(input.question) }] })
+            }).then(function (res) {
+              var reader = res.body.getReader();
+              var decoder = new TextDecoder();
+              var text = '';
+              var buf = '';
+              function pump() {
+                return reader.read().then(function (chunk) {
+                  if (chunk.done) return text;
+                  buf += decoder.decode(chunk.value, { stream: true });
+                  var blocks = buf.split('\n\n');
+                  buf = blocks.pop() || '';
+                  for (var i = 0; i < blocks.length; i++) {
+                    var lines = blocks[i].split('\n');
+                    var evtType = '';
+                    var data = '';
+                    for (var j = 0; j < lines.length; j++) {
+                      if (lines[j].slice(0, 7) === 'event: ') evtType = lines[j].slice(7).trim();
+                      else if (lines[j].slice(0, 6) === 'data: ') data = lines[j].slice(6).trim();
+                    }
+                    if (evtType === 'delta' && data) {
+                      try { text += JSON.parse(data).text || ''; } catch (_) {}
+                    }
+                  }
+                  return pump();
+                });
+              }
+              return pump();
+            });
+          }
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Background layer: Starfield (static SVG, always present) + GalaxyBackdrop (WebGL,
+         Commit 3). GalaxyBackdrop mounts client:idle and overlays Starfield when motion is on
+         and fx ≠ 'off'. When Galaxy is inactive (motion off / fx=off), Starfield shows through. -->
+    <Starfield />
+    <GalaxyBackdrop client:idle />
+    <a href="#main-content" class="skip-link">{getStrings(locale).nav.skipToContent}</a>
+    <ScrollProgressThread />
+    <Header />
+    <main id="main-content">
+      <slot />
+    </main>
+    <Footer />
+
+    <!--
+      Static pre-hydration launcher shell (spec section 8: "keep the pre-hydration launcher
+      visually present ... so there's no pop-in"). The real ChatWidget island loads client:idle;
+      until it hydrates, this plain button is visually identical and simply opens the panel by
+      dispatching the same "fst:open-chat" event the island listens for once it's ready (the
+      island then hides this shell — see ChatWidget's mount effect). Clicking before hydration
+      just queues the intent; nothing renders until the island takes over, which happens quickly
+      since `client:idle` fires as soon as the main thread is free.
+    -->
+    <!-- Avatar launcher static shell — circular avatar with brand glyph + bottom-right online dot.
+         Mirrors ChatWidget.tsx's hydrated markup exactly so there's no pop-in on hydration.
+         The island hides this shell on mount (see ChatWidget's mount effect). -->
+    <button
+      id="chat-launcher-static"
+      type="button"
+      aria-label={getStrings(locale).chat.launcherLabelOpen}
+      class="border-beam overlay-surface glass btn-interactive btn-interactive--icon chat-safe-bottom chat-safe-right fixed z-40 flex h-14 w-14 min-h-11 min-w-11 items-center justify-center rounded-full text-[var(--accent)] shadow-lg print:hidden"
+    >
+      <span class="relative inline-flex">
+        <!-- Brand glyph avatar (40px, circular crop) — matches ChatWidget.tsx's BrandMarkIcon size. -->
+        <img src="/brand-glyph.png" width="40" height="40" class="rounded-full" alt="" aria-hidden="true" />
+        <!-- Online status dot — bottom-right of avatar, classic messenger badge idiom.
+             Uses --online token (#22c55e) which is always green per owner requirement. -->
+        <span
+          aria-hidden="true"
+          class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[var(--bg)]"
+          style="background:var(--online)"></span>
+      </span>
+    </button>
+    <script is:inline>
+      document.getElementById('chat-launcher-static')?.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('fst:open-chat'));
+      });
+    </script>
+    <ChatWidget client:idle strings={getStrings(locale).chat} />
+
+    <!--
+      Static pre-hydration a11y-badge shell (addendum V2c section 7) — mirrors the chat launcher
+      shell above (bottom-left instead of bottom-right). Links straight to /accessibility until
+      the real AccessibilityPanel island hydrates and takes over (hidden in that island's mount
+      effect), so there's no pop-in and the control is reachable even if hydration is slow.
+    -->
+    <a
+      id="a11y-badge-static"
+      href={locale === 'pt-br' ? '/pt/accessibility' : '/accessibility'}
+      aria-label={getStrings(locale).a11yPanel.badgeLabelOpen}
+      class="border-beam overlay-surface glass btn-interactive btn-interactive--icon chat-safe-bottom chat-safe-left fixed z-40 flex h-14 w-14 min-h-11 min-w-11 items-center justify-center rounded-full text-[var(--accent)] shadow-lg"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <g stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="4" r="1.6" fill="currentColor" stroke="none" />
+          <path d="M4 8.5 L12 10.5 L20 8.5" />
+          <path d="M12 10.5 L12 14 L9 21" />
+          <path d="M12 14 L15 21" />
+          <path d="M9.5 14.5 L14.5 14.5" />
+        </g>
+      </svg>
+    </a>
+    <AccessibilityPanel client:idle strings={getStrings(locale).a11yPanel} accessibilityHref={locale === 'pt-br' ? '/pt/accessibility' : '/accessibility'} />
+    <CommandPaletteMount locale={locale} />
+
+    <!--
+      Global Ctrl/Cmd+K shortcut for the command palette (V3c commit 1): dispatches the same
+      "fst:open-palette" event the header trigger button's click handler dispatches (see
+      Header.astro), so it works before the CommandPalette island hydrates AND stays the single
+      owner of the shortcut afterwards — deliberately NOT duplicated as a second `keydown` listener
+      inside the island itself, which would double-fire on the same keypress once hydrated (one
+      listener setting `open` via this event, the other toggling it directly) and immediately
+      close the panel it just opened.
+    -->
+    <script is:inline>
+      document.addEventListener('keydown', function (e) {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent('fst:open-palette'));
+        }
+      });
+    </script>
+
+    <!--
+      Motion bootstrap (addendum V2b): lazy-loads Lenis smooth scroll, the section-title reveal
+      script, and card magnetics/spotlight on idle, so content pages pay nothing for them before
+      the browser is free. Every module internally no-ops when the motion kill-switch is off, or
+      (for card motion) on coarse/touch pointers (src/lib/motion.ts).
+    -->
+    <script>
+      function boot() {
+        import('../lib/smooth-scroll').then(({ initSmoothScroll }) => initSmoothScroll());
+        import('../lib/section-reveal').then(({ initSectionReveals }) => initSectionReveals());
+        import('../lib/card-motion').then(({ initCardMotion }) => initCardMotion());
+      }
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(boot);
+      } else {
+        setTimeout(boot, 200);
+      }
+    </script>
+  </body>
+</html>

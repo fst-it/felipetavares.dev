@@ -1,0 +1,322 @@
+---
+/**
+ * /lab — the Design Lab (dev-only). Owner-facing candidate gallery for the contested visuals:
+ * brand marks (M1-M8) and color systems (C1-C8 + the purchased logo's original palette).
+ * Selections here are throwaway previews: the chosen candidates get productionized into
+ * BrandMark/tokens and the rest of this page is deleted.
+ *
+ * Not part of the public site: prerendered as a stub in production builds.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const dev = import.meta.env.DEV;
+
+const colorSystems = [
+  { id: 'c1', name: 'C1 · Electric blue + signal orange (current)', cool: '#4F8CFF', warm: '#F97316' },
+  { id: 'c2', name: 'C2 · Indigo + amber', cool: '#6366F1', warm: '#F59E0B' },
+  { id: 'c3', name: 'C3 · Cobalt + coral', cool: '#2563EB', warm: '#FF7F6E' },
+  { id: 'c4', name: 'C4 · Petrol teal + burnt orange', cool: '#0F8A80', warm: '#C2540A' },
+  { id: 'c5', name: 'C5 · Royal blue + gold', cool: '#1D4ED8', warm: '#D4A017' },
+  { id: 'c6', name: 'C6 · Mono-blue, orange only for AI moments', cool: '#4F8CFF', warm: '#4F8CFF', aiWarm: '#F97316' },
+  { id: 'c7', name: 'C7 · Tri-stop gradient signature (blue→violet→orange)', cool: '#4F8CFF', warm: '#F97316', via: '#8B5CF6' },
+  { id: 'c8', name: 'C8 · Section-adaptive (hue drifts per section)', cool: '#4F8CFF', warm: '#F97316', adaptive: true },
+  { id: 'c9', name: 'Bonus · Your logo’s original palette', cool: '#1536F1', warm: '#E98E0D' },
+];
+---
+
+<BaseLayout title="Design Lab" description="Internal design candidate gallery." noindex>
+  {
+    !dev ? (
+      <section class="px-4 py-24 text-center">
+        <h1>Design Lab</h1>
+        <p class="text-muted mt-4">The lab runs on the dev server only.</p>
+      </section>
+    ) : (
+      <section class="lab mx-auto max-w-6xl px-4 pb-24 pt-10">
+        <h1 class="font-display">Design Lab</h1>
+        <p class="text-muted mt-2 max-w-2xl">
+          Pick with your eyes, on your devices, in both themes. Every candidate below is live —
+          the color systems repaint the marks instantly, and “apply to page” repaints the whole
+          site chrome while you browse. Note the codes you want (e.g. “M4 + C4”).
+        </p>
+
+        <h2 class="mt-12 font-display text-xl">Color systems</h2>
+        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" id="lab-colors">
+          {colorSystems.map((c, i) => (
+            <label
+              class="glass flex cursor-pointer items-center gap-3 rounded-[var(--radius-md)] p-4"
+              data-cool={c.cool}
+              data-warm={c.warm}
+              data-via={c.via ?? ''}
+              data-ai-warm={c.aiWarm ?? c.warm}
+              data-adaptive={c.adaptive ? '1' : ''}
+            >
+              <input type="radio" name="lab-color" value={c.id} checked={i === 0} class="accent-[var(--accent)]" />
+              <span class="flex items-center gap-2">
+                <span class="inline-block h-5 w-5 rounded-full" style={`background:${c.cool}`} />
+                <span class="inline-block h-5 w-5 rounded-full" style={`background:${c.via ?? c.warm}`} />
+                {c.via && <span class="inline-block h-5 w-5 rounded-full" style={`background:${c.warm}`} />}
+                <span class="text-sm">{c.name}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <label class="text-muted mt-3 inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+          <input type="checkbox" id="lab-apply-page" class="accent-[var(--accent)]" />
+          Apply the selected system to the entire page chrome (header, buttons, thread) while I browse
+        </label>
+        <div class="flex flex-wrap gap-6">
+          <label class="text-muted inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+            <input type="checkbox" id="lab-fluid" checked class="accent-[var(--accent)]" />
+            Fluid gradient marks (one continuous warm→cool gradient, like the purchased logo)
+          </label>
+          <label class="text-muted inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+            <input type="checkbox" id="lab-deep" class="accent-[var(--accent)]" />
+            Deepen tones (darker-leaning variants of every system)
+          </label>
+        </div>
+
+        <h2 class="mt-14 font-display text-xl">Brand marks</h2>
+        <p class="text-muted mt-1 text-sm">
+          Rendered at header size (28px), large (96px), and favicon size (16px). All repaint with the
+          selected color system.
+        </p>
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2" id="lab-marks">
+          {
+            [
+              { id: 'M1', name: 'Zip brain, faithful redraw + Sora wordmark', desc: 'Your purchased glyph’s dual-lobe silhouette, redrawn lightweight, hemisphere gradient like the original.' },
+              { id: 'M2', name: 'Zip brain, single-accent mono', desc: 'Same silhouette, one color — follows the accent picker; quietest option.' },
+              { id: 'M3', name: 'Zip brain + FT lockup', desc: 'Glyph plus compact FT in Sora Bold (the serif FT is dropped).' },
+              { id: 'M4', name: 'Node-brain (site language redraw)', desc: 'The zip silhouette rebuilt from nodes and edges — logo and hero share one visual language.' },
+              { id: 'M5', name: 'Hemisphere mark, fold notches', desc: 'The current mark rescued: lobed edges and a real bridge so it reads brain, not pie.' },
+              { id: 'M6', name: 'Circuit-brain, single stroke', desc: 'One continuous outline with circuit stubs; draws itself in on load.' },
+              { id: 'M7', name: 'Wordmark-first + gradient node', desc: 'Typography-led: your name set in Sora, one gradient node as the only glyph.' },
+              { id: 'M8', name: 'Zip brain in glass squircle', desc: 'M1 inside a glass tile — app-icon feel, strongest presence in the header.' },
+            ].map((m) => (
+              <div class="glass rounded-[var(--radius-md)] p-5" data-mark={m.id}>
+                <div class="flex items-baseline justify-between gap-2">
+                  <p class="font-display text-sm font-semibold">{m.id} — {m.name}</p>
+                </div>
+                <p class="text-muted mt-1 text-xs">{m.desc}</p>
+                <div class="mt-4 flex items-center gap-8">
+                  <span class="lab-mark-slot" data-size="28" />
+                  <span class="lab-mark-slot" data-size="96" />
+                  <span class="lab-mark-slot lab-favicon-frame" data-size="16" />
+                </div>
+              </div>
+            ))
+          }
+        </div>
+
+      </section>
+    )
+  }
+</BaseLayout>
+
+{dev && (
+<script>
+  // ------- mark geometry (shared path library; drawn once, instantiated per slot/size) -------
+  const BRAIN_LEFT =
+    'M14.6 4.6 C11.2 3.2 7.6 4.4 6.4 7.2 C3.8 7.8 2.6 10.6 3.8 12.9 C2.2 14.9 2.8 18.1 5.0 19.3 C5.2 22.5 8.0 24.6 11.2 23.9 C12.3 25.5 13.5 26.2 14.6 26.4 Z';
+  const BRAIN_RIGHT =
+    'M17.4 4.6 C20.8 3.2 24.4 4.4 25.6 7.2 C28.2 7.8 29.4 10.6 28.2 12.9 C29.8 14.9 29.2 18.1 27.0 19.3 C26.8 22.5 24.0 24.6 20.8 23.9 C19.7 25.5 18.5 26.2 17.4 26.4 Z';
+  const FOLDS_LEFT = ['M8 10 Q10.6 10.6 11.8 9', 'M6.4 15.2 Q9.4 15.6 11.2 14.2', 'M8.6 19.6 Q10.8 19.4 12.2 18'];
+  const FOLDS_RIGHT = ['M24 10 Q21.4 10.6 20.2 9', 'M25.6 15.2 Q22.6 15.6 20.8 14.2', 'M23.4 19.6 Q21.2 19.4 19.8 18'];
+  const NODES_LEFT = [
+    [12.5, 6, 1.7], [8, 7.5, 2.1], [4.9, 11.4, 1.8], [4.6, 16.2, 2.1], [7.4, 20.6, 1.8], [11.6, 23.4, 2.0], [10.4, 14.6, 1.5],
+  ];
+  const NODES_RIGHT = [
+    [19.5, 6, 1.7], [24, 7.5, 2.1], [27.1, 11.4, 1.8], [27.4, 16.2, 2.1], [24.6, 20.6, 1.8], [20.4, 23.4, 2.0], [21.6, 14.6, 1.5],
+  ];
+  const chain = (pts: number[][]) => pts.slice(0, 6).map((p, i, a) => (i ? `M${a[i - 1][0]} ${a[i - 1][1]} L${p[0]} ${p[1]}` : '')).join(' ');
+
+  const g = (id: string) =>
+    `<defs><linearGradient id="lg-${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--lab-warm)"/><stop offset="${
+      document.documentElement.style.getPropertyValue('--lab-via') ? '0.5" stop-color="var(--lab-via)"/><stop offset="1' : '1'
+    }" stop-color="var(--lab-cool)"/></linearGradient></defs>`;
+
+  let fluid = true;
+  const hemiFill = (side: 'warm' | 'cool', uid: string) => (fluid ? `url(#lg-${uid})` : `var(--lab-${side})`);
+  const marks: Record<string, (s: number, uid: string) => string> = {
+    M1: (s, uid) => `<svg width="${s}" height="${s}" viewBox="0 0 32 32">${g(uid)}
+      <path d="${BRAIN_LEFT}" fill="${hemiFill('warm', uid)}"/><path d="${BRAIN_RIGHT}" fill="${hemiFill('cool', uid)}"/>
+      ${FOLDS_LEFT.map((d) => `<path d="${d}" stroke="var(--bg,#0B0E14)" stroke-width="1.4" fill="none" stroke-linecap="round"/>`).join('')}
+      ${FOLDS_RIGHT.map((d) => `<path d="${d}" stroke="var(--bg,#0B0E14)" stroke-width="1.4" fill="none" stroke-linecap="round"/>`).join('')}
+      <path d="M14.6 13 Q16 14.5 17.4 13" stroke="url(#lg-${uid})" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`,
+    M2: (s) => `<svg width="${s}" height="${s}" viewBox="0 0 32 32">
+      <path d="${BRAIN_LEFT}" fill="var(--lab-cool)" opacity="0.55"/><path d="${BRAIN_RIGHT}" fill="var(--lab-cool)"/>
+      ${[...FOLDS_LEFT, ...FOLDS_RIGHT].map((d) => `<path d="${d}" stroke="var(--bg,#0B0E14)" stroke-width="1.4" fill="none" stroke-linecap="round"/>`).join('')}</svg>`,
+    M3: (s, uid) => `<svg width="${s * 1.9}" height="${s}" viewBox="0 0 61 32">${g(uid)}
+      <path d="${BRAIN_LEFT}" fill="var(--lab-warm)"/><path d="${BRAIN_RIGHT}" fill="var(--lab-cool)"/>
+      <text x="34" y="23" font-family="Sora Variable, Sora, sans-serif" font-weight="800" font-size="17" fill="currentColor">FT</text></svg>`,
+    M4: (s, uid) => `<svg width="${s}" height="${s}" viewBox="0 0 32 32">${g(uid)}
+      <g stroke="var(--lab-warm)" stroke-width="0.7" opacity="0.6">${chain(NODES_LEFT)}</g>
+      <g stroke="var(--lab-cool)" stroke-width="0.7" opacity="0.6">${chain(NODES_RIGHT)}</g>
+      <g stroke="var(--lab-warm)" stroke-width="0.55" opacity="0.45">${[[0, 2], [1, 3], [2, 6], [4, 6], [1, 6]].map(([a, b]) => `<path d="M${NODES_LEFT[a][0]} ${NODES_LEFT[a][1]} L${NODES_LEFT[b][0]} ${NODES_LEFT[b][1]}"/>`).join('')}</g>
+      <g stroke="var(--lab-cool)" stroke-width="0.55" opacity="0.45">${[[0, 2], [1, 3], [2, 6], [4, 6], [1, 6]].map(([a, b]) => `<path d="M${NODES_RIGHT[a][0]} ${NODES_RIGHT[a][1]} L${NODES_RIGHT[b][0]} ${NODES_RIGHT[b][1]}"/>`).join('')}</g>
+      <path d="M10.4 14.6 Q16 12.8 21.6 14.6" stroke="url(#lg-${uid})" stroke-width="1.3" fill="none"/>
+      <path d="M12.5 6 Q16 4.6 19.5 6" stroke="url(#lg-${uid})" stroke-width="0.8" fill="none" opacity="0.7"/>
+      <path d="M11.6 23.4 Q16 25.2 20.4 23.4" stroke="url(#lg-${uid})" stroke-width="0.8" fill="none" opacity="0.7"/>
+      ${NODES_LEFT.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--lab-warm)"/>`).join('')}
+      ${NODES_RIGHT.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--lab-cool)"/>`).join('')}</svg>`,
+    M5: (s, uid) => `<svg width="${s}" height="${s}" viewBox="0 0 32 32">${g(uid)}
+      <path d="M14.6 5 C9 4 4 8 4.4 13 C3 15 4 19 6.6 20.4 C7.6 24 11 26 14.6 25.6 L14.6 21.5 Q12.4 20.5 12.6 18.2 L14.6 17.6 L14.6 12.4 Q11.8 12 11.6 9.6 L14.6 9 Z" fill="${hemiFill('warm', uid)}"/>
+      <path d="M17.4 5 C23 4 28 8 27.6 13 C29 15 28 19 25.4 20.4 C24.4 24 21 26 17.4 25.6 L17.4 21.5 Q19.6 20.5 19.4 18.2 L17.4 17.6 L17.4 12.4 Q20.2 12 20.4 9.6 L17.4 9 Z" fill="${hemiFill('cool', uid)}"/>
+      <path d="M13.4 15.3 Q16 16.8 18.6 15.3" stroke="url(#lg-${uid})" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`,
+    M6: (s, uid) => `<svg width="${s}" height="${s}" viewBox="0 0 32 32">${g(uid)}
+      <path d="M16 5.4 C12 3.4 6.8 5.4 5.8 9.2 C3 10.4 2.6 14.4 4.6 16.4 C3.6 19.6 5.8 22.8 9 23 C10.2 25.8 14 27 16 25.2 C18 27 21.8 25.8 23 23 C26.2 22.8 28.4 19.6 27.4 16.4 C29.4 14.4 29 10.4 26.2 9.2 C25.2 5.4 20 3.4 16 5.4 Z" fill="none" stroke="url(#lg-${uid})" stroke-width="1.7" stroke-linejoin="round" class="lab-draw"/>
+      <path d="M16 6 L16 25" stroke="url(#lg-${uid})" stroke-width="1.2" opacity="0.8"/>
+      <path d="M10 12 h4 M22 12 h-4 M9 18 h5 M23 18 h-5" stroke="url(#lg-${uid})" stroke-width="1.1"/>
+      <circle cx="10" cy="12" r="1.2" fill="var(--lab-warm)"/><circle cx="22" cy="12" r="1.2" fill="var(--lab-cool)"/>
+      <circle cx="9" cy="18" r="1.2" fill="var(--lab-warm)"/><circle cx="23" cy="18" r="1.2" fill="var(--lab-cool)"/></svg>`,
+    M7: (s, uid) => `<svg width="${s * 5.4}" height="${s * 0.62}" viewBox="0 0 172 20">${g(uid)}
+      <circle cx="8" cy="10" r="6" fill="url(#lg-${uid})"/>
+      <text x="20" y="14.5" font-family="Sora Variable, Sora, sans-serif" font-weight="700" font-size="13" fill="currentColor">felipetavares<tspan fill="var(--lab-cool)">.dev</tspan></text></svg>`,
+    M8: (s, uid) => `<svg width="${s}" height="${s}" viewBox="0 0 32 32">${g(uid)}
+      <rect x="1" y="1" width="30" height="30" rx="8.5" fill="var(--surface-glass,rgb(255 255 255/.05))" stroke="var(--border-glass,rgb(255 255 255/.14))"/>
+      <g transform="translate(16 16) scale(0.78) translate(-16 -16)">
+        <path d="${BRAIN_LEFT}" fill="${hemiFill('warm', uid)}"/><path d="${BRAIN_RIGHT}" fill="${hemiFill('cool', uid)}"/>
+        <path d="M14.6 13 Q16 14.5 17.4 13" stroke="url(#lg-${uid})" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      </g></svg>`,
+  };
+
+  let uidCounter = 0;
+  function renderMarks() {
+    document.querySelectorAll<HTMLElement>('[data-mark]').forEach((card) => {
+      const id = card.dataset.mark!;
+      card.querySelectorAll<HTMLElement>('.lab-mark-slot').forEach((slot) => {
+        slot.innerHTML = marks[id](Number(slot.dataset.size), `u${uidCounter++}`);
+      });
+    });
+  }
+
+  function applyColor(label: HTMLElement) {
+    const r = document.documentElement.style;
+    const deep = (document.getElementById('lab-deep') as HTMLInputElement)?.checked;
+    const tone = (c: string) => (deep ? `color-mix(in oklab, ${c} 78%, black)` : c);
+    r.setProperty('--lab-cool', tone(label.dataset.cool!));
+    r.setProperty('--lab-warm', tone(label.dataset.warm!));
+    label.dataset.via ? r.setProperty('--lab-via', tone(label.dataset.via)) : r.removeProperty('--lab-via');
+    renderMarks(); // gradient stop count may change
+    const apply = (document.getElementById('lab-apply-page') as HTMLInputElement)?.checked;
+    if (apply) {
+      r.setProperty('--accent', label.dataset.cool!);
+      r.setProperty('--brand-warm', label.dataset.warm!);
+      r.setProperty('--accent-glow', label.dataset.cool + '73');
+    } else {
+      ['--accent', '--brand-warm', '--accent-glow'].forEach((p) => r.removeProperty(p));
+    }
+  }
+
+  const colorBox = document.getElementById('lab-colors');
+  colorBox?.addEventListener('change', (e) => {
+    const label = (e.target as HTMLElement).closest('label') as HTMLElement;
+    if (label) applyColor(label);
+  });
+  const reapply = () => {
+    const checked = colorBox?.querySelector<HTMLInputElement>('input:checked');
+    if (checked) applyColor(checked.closest('label') as HTMLElement);
+  };
+  document.getElementById('lab-apply-page')?.addEventListener('change', reapply);
+  document.getElementById('lab-deep')?.addEventListener('change', reapply);
+  document.getElementById('lab-fluid')?.addEventListener('change', (e) => {
+    fluid = (e.target as HTMLInputElement).checked;
+    renderMarks();
+  });
+
+  // initial paint with C1
+  const first = colorBox?.querySelector<HTMLElement>('label');
+  if (first) applyColor(first);
+</script>
+)}
+
+<style>
+  .lab-mark-slot {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text);
+  }
+  .lab-favicon-frame {
+    padding: 4px;
+    border: 1px dashed var(--border-glass);
+    border-radius: 4px;
+  }
+  .lab-draw {
+    stroke-dasharray: 120;
+    stroke-dashoffset: 120;
+    animation: lab-draw 1.6s ease-out forwards;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lab-draw {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes lab-draw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Candidate card spotlight — enlarges the radio-selected panel */
+  .lab-candidate-spotlight .lab-hero-panel,
+  .lab-candidate-spotlight .lab-bg-panel {
+    aspect-ratio: 16 / 5;
+    transition: aspect-ratio 300ms ease;
+  }
+
+  /* Background: stars twinkle only when motion is on */
+  html[data-motion='on'] .b1star,
+  html[data-motion='on'] .b2star,
+  html[data-motion='on'] .b3star,
+  html[data-motion='on'] .b4star,
+  html[data-motion='on'] .b5a,
+  html[data-motion='on'] .b5b,
+  html[data-motion='on'] .b6star,
+  html[data-motion='on'] .b7star {
+    animation: lab-star-twinkle var(--star-dur, 4s) ease-in-out infinite alternate;
+    animation-delay: var(--star-delay, 0s);
+  }
+  @keyframes lab-star-twinkle {
+    0%   { opacity: var(--op, 0.05); }
+    100% { opacity: calc(var(--op, 0.05) * 0.2); }
+  }
+
+  /* Aurora drift (B3) — motion-gated */
+  @keyframes lab-aurora-a { to { transform: translate(6%, 5%) scale(1.1); } }
+  @keyframes lab-aurora-b { to { transform: translate(-5%, -7%) scale(1.08); } }
+  html[data-motion='off'] [style*="lab-aurora-a"],
+  html[data-motion='off'] [style*="lab-aurora-b"] {
+    animation: none !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [style*="lab-aurora-a"], [style*="lab-aurora-b"] { animation: none !important; }
+  }
+
+  /* B5 parallax drift layers — motion-gated */
+  @keyframes lab-drift-slow { to { transform: translateY(-6px); } }
+  @keyframes lab-drift-fast { to { transform: translateY(-14px); } }
+  html[data-motion='off'] [style*="lab-drift-slow"],
+  html[data-motion='off'] [style*="lab-drift-fast"] {
+    animation: none !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [style*="lab-drift-slow"], [style*="lab-drift-fast"] { animation: none !important; }
+  }
+
+  /* B7 auto-sheen: replays the ::before sweep by re-triggering the animation */
+  .btn-interactive.auto-sheen::before {
+    opacity: 0.6;
+    transform: translateX(100%);
+    transition:
+      transform 500ms var(--ease-out, ease-out),
+      opacity 500ms var(--ease-out, ease-out);
+    animation: lab-auto-sheen 500ms var(--ease-out, ease-out) forwards;
+  }
+  @keyframes lab-auto-sheen {
+    from { transform: translateX(-100%); opacity: 0.6; }
+    to   { transform: translateX(100%);  opacity: 0; }
+  }
+  html[data-motion='off'] .btn-interactive.auto-sheen::before {
+    animation: none;
+    opacity: 0;
+  }
+</style>

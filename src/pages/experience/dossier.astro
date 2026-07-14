@@ -1,0 +1,253 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BreadcrumbList from '../../components/astro/BreadcrumbList.astro';
+import { contentRepository, siteConfig } from '../../config/site';
+import { formatMonthYear } from '../../lib/format-date';
+
+const roles = await contentRepository.getRoles(); // reverse-chronological (current role first)
+const dossier = await contentRepository.getDossier();
+
+const pageTitle = 'Executive Dossier';
+const pageDescription =
+  "Felipe Tavares' executive dossier: a scannable summary of 18 years in enterprise architecture, AI, and data strategy, with competency matrix, role history, and credentials.";
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={`${siteConfig.url}/experience/dossier`}
+  markdownTwin="/experience/dossier.md"
+>
+  <BreadcrumbList crumbs={[
+    { name: 'Home', url: siteConfig.url },
+    { name: 'Journey', url: `${siteConfig.url}/experience` },
+    { name: 'Executive Dossier', url: `${siteConfig.url}/experience/dossier` },
+  ]} />
+  <section class="dossier-print px-4 pb-11 pt-11 sm:pt-16">
+    <div class="mx-auto max-w-4xl">
+      <header class="flex flex-col gap-4 border-b border-[var(--border-glass)] pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="mb-2 font-mono text-sm uppercase tracking-wider text-[var(--accent)]">Executive Dossier</p>
+          <h1 class="text-balance">{siteConfig.name}</h1>
+          <p class="mt-2 text-muted">Sr. Principal Architect Leader · Enterprise Architecture, AI & Data Strategy</p>
+        </div>
+
+      </header>
+
+      <section class="mt-10" aria-labelledby="summary-heading">
+        <h2 id="summary-heading" class="font-display text-xl">Executive Summary</h2>
+        <p class="mt-3 text-muted">{dossier.summary}</p>
+      </section>
+
+      <section class="mt-10" aria-labelledby="matrix-heading">
+        <h2 id="matrix-heading" class="font-display text-xl">Competency Matrix</h2>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-[var(--border-glass)] text-left">
+                <th scope="col" class="py-2 pr-4 font-mono text-xs uppercase tracking-wider text-muted">Domain</th>
+                <th scope="col" class="py-2 pr-4 font-mono text-xs uppercase tracking-wider text-muted">Depth</th>
+                <th scope="col" class="py-2 font-mono text-xs uppercase tracking-wider text-muted">Evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                dossier.competencyMatrix.map((row) => (
+                  <tr class="border-b border-[var(--border-glass)] align-top">
+                    <td class="py-3 pr-4 font-medium text-[var(--text)]">{row.domain}</td>
+                    <td class="py-3 pr-4">
+                      <span class="sr-only">{row.depth} out of 5</span>
+                      <span aria-hidden="true" class="inline-flex gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span
+                            class={`h-2 w-2 rounded-full ${i < row.depth ? 'bg-[var(--accent)]' : 'bg-[var(--surface-glass-strong)]'}`}
+                          />
+                        ))}
+                      </span>
+                    </td>
+                    <td class="py-3 text-muted">{row.evidence}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mt-10" aria-labelledby="roles-heading">
+        <h2 id="roles-heading" class="font-display text-xl">Experience</h2>
+        <div class="mt-4 flex flex-col gap-6">
+          {
+            roles.map((role) => (
+              <article class="border-b border-[var(--border-glass)] pb-6 last:border-0">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                  <h3 class="font-display text-base font-semibold text-[var(--text)]">
+                    {role.title} · {role.org}
+                  </h3>
+                  <p class="font-mono text-xs text-muted">
+                    {formatMonthYear(role.start)} — {role.end ? formatMonthYear(role.end) : 'Present'}
+                  </p>
+                </div>
+                {role.additionalLocation ? (
+                  <div class="flex flex-col gap-0.5 text-xs text-muted">
+                    <span>{role.location}</span>
+                    <span>{role.additionalLocation}</span>
+                  </div>
+                ) : (
+                  <p class="text-xs text-muted">{role.location}</p>
+                )}
+                <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
+                  {role.impact.map((item) => (
+                    <li>
+                      <span class="font-medium text-[var(--text)]">{item.metric}</span> — {item.narrative}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))
+          }
+        </div>
+      </section>
+
+      <div class="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2">
+        <section aria-labelledby="education-heading">
+          <h2 id="education-heading" class="font-display text-xl">Education & Certifications</h2>
+          <ul class="mt-3 space-y-2 text-sm text-muted">
+            {dossier.education.map((e) => (
+              <li>
+                <span class="font-medium text-[var(--text)]">{e.degree}</span> — {e.school}
+              </li>
+            ))}
+          </ul>
+          <ul class="mt-3 space-y-1 text-sm text-muted">
+            {dossier.certifications.map((cert) => (
+              <li>{cert}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section aria-labelledby="languages-heading">
+          <h2 id="languages-heading" class="font-display text-xl">Languages</h2>
+          <ul class="mt-3 space-y-1 text-sm text-muted">
+            {dossier.languages.map((lang) => (
+              <li>
+                <span class="font-medium text-[var(--text)]">{lang.name}</span> — {lang.level}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <footer class="mt-12 flex flex-col gap-3 border-t border-[var(--border-glass)] pt-8 text-sm text-muted print:hidden sm:flex-row sm:items-center sm:justify-between">
+        <p>
+          Prefer the story? <a href="/experience" class="text-[var(--accent)] underline underline-offset-2">Read the journey</a>.
+          Machine-readable CV: <a href="/api/cv.json" class="text-[var(--accent)] underline underline-offset-2">/api/cv.json</a>.
+        </p>
+        <button
+          type="button"
+          id="ask-my-ai"
+          class="inline-flex min-h-11 items-center text-xs font-medium text-[var(--accent)] underline underline-offset-2"
+        >
+          Ask my AI
+        </button>
+      </footer>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // Opens the site-wide ChatWidget island (mounted in BaseLayout) via the same custom event
+  // its static pre-hydration launcher shell dispatches — this trigger doesn't need to know
+  // whether the island has hydrated yet.
+  const askMyAiButton = document.getElementById('ask-my-ai');
+  askMyAiButton?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('fst:open-chat'));
+  });
+</script>
+
+<style>
+  /*
+   * Print stylesheet — spec section 7: light theme, ALL data expanded and present, sensible page
+   * breaks, clean typographic layout.
+   *
+   * V5a fix 10 (owner: "generated PDF feels broken in a few sections and missing data wrongly").
+   * Root cause of the illegible/washed-out text (verified by generating an actual PDF via
+   * Playwright and inspecting it): this block forced `color` on `html`/`body`/`.dossier-print`/
+   * headings/links to a dark literal, but every OTHER element on the page reads its color from a
+   * CSS custom property (`.text-muted` -> `var(--text-muted)`, `text-[var(--accent)]`, etc.) —
+   * those custom properties are still resolving to the DARK theme's values (e.g.
+   * `--text-muted: #8a93a6`, a light gray meant to read against a dark background), because
+   * nothing here ever overrides the *tokens themselves*, only a few specific selectors' computed
+   * color. An element with its own explicit `text-muted`/`text-[var(--accent)]` class wins over
+   * inherited color from `.dossier-print`, so most of the page's body text, metric labels,
+   * competency-matrix domain names, and education/language entries rendered near-invisible pale
+   * gray on the forced-white background. Fixed by overriding `--text`/`--text-muted`/`--accent`/
+   * `--border-glass` directly on `.dossier-print`, so every element that reads them — regardless
+   * of which specific class it uses — gets a print-legible value with ONE set of overrides.
+   */
+  @media print {
+    :global(header),
+    :global(footer):not(.dossier-print footer),
+    :global(.skip-link) {
+      display: none !important;
+    }
+
+    :global(html),
+    :global(body) {
+      background: #ffffff !important;
+      color: #14171f !important;
+    }
+
+    .dossier-print {
+      /* Print-legible token overrides (V5a fix 10) — every element reading these custom
+         properties (not just the few selectors below) now gets dark-on-white values instead of
+         the dark theme's light-on-dark palette. */
+      --text: #14171f;
+      --text-muted: #4a5468;
+      --accent: #1c4fb0;
+      --accent-2: #1c4fb0;
+      --border-glass: #d8dce3;
+      padding: 0 !important;
+      color: var(--text) !important;
+    }
+
+    .dossier-print :global(.glass) {
+      background: none !important;
+      backdrop-filter: none !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .dossier-print :global(.glass::before),
+    .dossier-print :global(.glass::after) {
+      display: none !important;
+    }
+
+    .dossier-print h1,
+    .dossier-print h2,
+    .dossier-print h3 {
+      color: var(--text) !important;
+    }
+
+    .dossier-print :global(a) {
+      color: var(--text) !important;
+      text-decoration: none !important;
+    }
+
+    /* Sensible page breaks (V5a fix 10) — keep each role/education/language entry and the
+       competency-matrix table together rather than splitting mid-row across a page boundary. */
+    .dossier-print :global(article),
+    .dossier-print :global(tr),
+    .dossier-print :global(li) {
+      break-inside: avoid;
+    }
+
+    /* The competency matrix's `overflow-x-auto` wrapper is a scroll container for narrow SCREEN
+       viewports — on the fixed-width, non-scrolling PAGE a print layout produces, that overflow
+       behavior serves no purpose and risks the browser clipping content that would otherwise have
+       been reachable by scrolling. Print always gets the natural (non-scrolling) table width. */
+    .dossier-print :global(.overflow-x-auto) {
+      overflow: visible !important;
+    }
+  }
+</style>

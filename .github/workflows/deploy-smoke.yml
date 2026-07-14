@@ -1,0 +1,73 @@
+name: Deploy Smoke
+
+# Separate from the main CI workflow — runs on demand after a deployment to verify the live site.
+# Never blocks a PR; never runs automatically on push. Trigger manually from the Actions tab or
+# via `gh workflow run deploy-smoke.yml --field smoke_base_url=https://felipetavares.dev`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      smoke_base_url:
+        description: 'Target URL to smoke test (default: pages.dev preview)'
+        default: 'https://felipetavares-dev.pages.dev'
+        required: false
+      smoke_contact:
+        description: 'Set to 1 to enable the contact form POST (will trigger a real email)'
+        default: '0'
+        required: false
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  smoke:
+    name: Smoke (${{ inputs.smoke_base_url }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '11'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-smoke-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install Playwright OS dependencies (cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+
+      - name: Run smoke suite
+        run: pnpm smoke
+        env:
+          SMOKE_BASE_URL: ${{ inputs.smoke_base_url }}
+          SMOKE_CONTACT: ${{ inputs.smoke_contact }}
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

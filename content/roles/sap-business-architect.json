@@ -1,0 +1,19 @@
+{
+  "org": "SAP",
+  "title": "Finance Consultant/Business Architect",
+  "start": "2017-07",
+  "end": "2018-07",
+  "location": "Lisbon, PT",
+  "arc": "Delivering best-practice SAP S/4HANA builds that materially reduce client cost",
+  "arcPt": "Entregando builds SAP S/4HANA de melhores práticas que reduzem materialmente os custos do cliente",
+  "impact": [
+    {
+      "metric": "Client cost reduction",
+      "narrative": "Business architecture on an SAP S/4HANA order-to-cash rollout: standard, best-practice build design that materially reduced client implementation cost.",
+      "narrativePt": "Arquitetura de negócio em um rollout de order-to-cash em SAP S/4HANA: design de build padronizado e de melhores práticas que reduziu materialmente o custo de implementação para o cliente."
+    }
+  ],
+  "domains": ["SAP Delivery, Strategy & Architecture"],
+  "order": 6,
+  "technologies": ["SAP S/4HANA"]
+}
